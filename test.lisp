@@ -88,6 +88,6 @@
 	   (gl:with-pushed-matrix
 	     (gl:translate 0 -4 2)
 	     (gl:rotate (mod i 360) 0 1 0)
-	     (draw-gl-string string gl-text :depth-shift (if (< 90 (mod i 360) 270) -0.01 0.01)))
+	     (draw-gl-string string gl-text))
 	   (gl-swap-buffers)
 	   (sleep 0.01)))))
