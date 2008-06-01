@@ -107,4 +107,8 @@
 				 (tex-coords t-pointer :float (length (find-original-array tex-coords)) :copy-in))
 	 (%gl:vertex-pointer 3 :float 0 v-pointer)
 	 (%gl:tex-coord-pointer 2 :float 0 t-pointer)
+	 (gl:bind-texture :texture-2d (texture-number-of gl-text))
+	 (gl:tex-env :texture-env :texture-env-mode :replace)
+	 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+	 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
 	 (gl:draw-arrays :quads 0 (* 4 (length string))))))))
