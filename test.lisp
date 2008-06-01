@@ -36,7 +36,7 @@
   (gl:load-identity)
   (gl:translate -3 0 -8)
   (zpb-ttf:with-font-loader (font "/usr/share/fonts/dejavu/DejaVuSerif.ttf")
-   (let ((gl-text (make-instance 'opengl-text :font font)))
+   (let ((gl-text (make-instance 'opengl-text :font font :emsquare 256)))
      (gl:bind-texture :texture-2d 0)
      (gl:with-primitive :quads
        (gl:color 0 0 1)
@@ -50,7 +50,9 @@
      (setf (color-of gl-text) (list 255 0 10))
      (setf (emsquare-of gl-text) 128)
      (draw-gl-string str gl-text :kerning nil)
-     (gl:translate 2 -1 0)
+     (gl:translate 3 0 0)
+     (draw-gl-string str gl-text)
+     (gl:translate -2 -1 0)
      (gl:bind-texture :texture-2d (opengl-text::texture-number-of gl-text))
      (gl:tex-env :texture-env :texture-env-mode :decal)
      (gl:with-primitive :quads
