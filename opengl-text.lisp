@@ -39,13 +39,14 @@
 										   (/ (zpb-ttf:ymin bb) scaler))))
 						   :scale-x (/ (emsquare-of gl-text) scaler)
 						   :scale-y (- (/ (emsquare-of gl-text) scaler))))
-	    (aa-state (aa:make-state)))
+	    (aa-state (aa:make-state))
+	    (h (array-dimension tex-array 0)))
 	(flet ((draw-function (x y alpha)
-		 (if (array-in-bounds-p tex-array x y 0)
-		     (setf (aref tex-array x y 0) 255
-			   (aref tex-array x y 1) 255
-			   (aref tex-array x y 2) 255
-			   (aref tex-array x y 3) (clamp alpha 0 255))
+		 (if (array-in-bounds-p tex-array (- h y) x 0)
+		     (setf (aref tex-array (- h y) x 0) 255
+			   (aref tex-array (- h y) x 1) 255
+			   (aref tex-array (- h y) x 2) 255
+			   (aref tex-array (- h y) x 3) (clamp alpha 0 255))
 		     (warn "Out of bounds: ~a ~a" x y))))
 	  (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function))))))
 
@@ -59,13 +60,14 @@
 			    (* em new-count))))
 	  (let ((new-texture (if (or (null (texture-of gl-text))
 				     (> new-size (array-dimension (texture-of gl-text) 0)))
-				 (make-ffa (list new-size em 4) :uint8)
+				 (make-ffa (list em new-size 4) :uint8)
 				 (texture-of gl-text)))
 		(new-charh (make-hash-table))
 		(new-count-ext (/ new-size em)))
 	    (when (and (texture-of gl-text)
 		       (not (eq (texture-of gl-text) new-texture)))
-	      (map-into (find-original-array new-texture) #'identity (find-original-array (texture-of gl-text))))
+	      (map-subarray (texture-of gl-text) new-texture
+			    :target-range `(:all (0 ,(1- (array-dimension (texture-of gl-text) 1))) :all)))
 	    (draw-char-on char new-texture (* em (hash-table-count charh)) gl-text)
 	    (let ((old-chars (sort (hash-table-alist charh)
 				   #'< :key #'(lambda (k)
@@ -93,8 +95,8 @@
 		       (cl-opengl:bind-texture :texture-2d new-number)
 		       (trivial-garbage:finalize gl-text #'(lambda ()
 							     (gl:delete-textures (list new-number))))))
-		 (cl-opengl:tex-image-2d :texture-2d 0 :rgba (array-dimension new-texture 0)
-					 (array-dimension new-texture 1) 0 :rgba :unsigned-byte tex-pointer)))
+		 (cl-opengl:tex-image-2d :texture-2d 0 :rgba (array-dimension new-texture 1)
+					 (array-dimension new-texture 0) 0 :rgba :unsigned-byte tex-pointer)))
 	     (setf (gethash char new-charh)
 		   (make-array '(4 2)
 			       :initial-contents
