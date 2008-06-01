@@ -5,7 +5,7 @@
 
 (defclass opengl-text ()
   ((font-loader :initarg :font :accessor font-loader-of)
-   (emsquare :initarg :emsquare :initform 64 :accessor emsquare-of)
+   (emsquare :initarg :emsquare :initform 32 :accessor emsquare-of)
    (scaler :accessor scaler-of :initform nil)
    (scale-to-unit :accessor scale-to-unit-of :initform nil)
    (color :accessor color-of :initarg :color :initform (list 255 255 255))
@@ -31,13 +31,21 @@
 (defgeneric flush-texture (gl-text &key new-texture-array)
   (:method ((gl-text opengl-text) &key (new-texture-array nil))
     ;; not the most efficient method
-    (let ((chars (iter (for (key nil) in-hashtable (character-hash-of gl-text))
-		       (collect key))))
-      (setf (character-hash-of gl-text) (make-hash-table))
-      (if new-texture-array
-	  (setf (texture-of gl-text) nil)
-	  (array-map! (constantly 0) (find-original-array (texture-of gl-text))))
-      (mapc (rcurry #'get-char-texture-coords gl-text) chars))))
+    (let ((chars (hash-table-keys (character-hash-of gl-text)))
+	  (em (emsquare-of gl-text)))
+      (when chars
+	(setf (character-hash-of gl-text) (make-hash-table))
+	(if new-texture-array
+	    (setf (texture-of gl-text) (make-ffa (list em
+						       (if *coerce-em-to-power-of-two*
+							   (ceiling-power-of-two (* em (length chars)))
+							  (* em (length chars)))
+						       4)
+						 :uint8))
+	    (let ((vec (find-original-array (texture-of gl-text))))
+	     (iter (for i index-of-vector vec)
+		   (setf (aref vec i) 0))))
+	(mapc (rcurry #'get-char-texture-coords gl-text) chars)))))
 
 (defmethod (setf color-of) :after (new-value (object opengl-text))
   (declare (ignore new-value))
@@ -49,27 +57,45 @@
 
 (defgeneric ensure-characters (characters gl-text)
   (:method ((characters sequence) (gl-text opengl-text))
-    (map nil (rcurry #'get-char-texture-coords gl-text) characters)))
+    (let ((chars-loaded (hash-table-keys (character-hash-of gl-text)))
+	  (texture (texture-of gl-text))
+	  (em (emsquare-of gl-text)))
+      (let ((more-chars (set-difference (coerce characters 'list) chars-loaded)))
+	(when more-chars
+	  (let ((chars (append chars-loaded more-chars)))
+	    (setf (texture-of gl-text) (make-ffa (list em
+						       (if *coerce-em-to-power-of-two*
+							   (ceiling-power-of-two (* em (length chars)))
+							   (* em (length chars)))
+						       4)
+						 :uint8))
+	    (when chars-loaded
+	      (map-subarray texture (texture-of gl-text)
+			    :target-range `(:all (0 ,(1- (array-dimension texture 1))) :all)))
+	    (map nil (rcurry #'get-char-texture-coords gl-text) more-chars)))))))
 
 (defun create-char-path (char shift gl-text)
   (let ((bb (zpb-ttf:bounding-box (font-loader-of gl-text)))
-	(em (emsquare-of gl-text))
+	(bb-glyph (zpb-ttf:bounding-box (zpb-ttf:find-glyph char (font-loader-of gl-text))))
+	(em (1- (emsquare-of gl-text)))
 	(font (font-loader-of gl-text)))
     (let ((scaler (max (- (zpb-ttf:xmax bb)
 			  (zpb-ttf:xmin bb))
 		       (- (zpb-ttf:ymax bb)
-			  (zpb-ttf:ymin bb)))))
+			  (zpb-ttf:ymin bb))))
+	  (scale-x (- (zpb-ttf:xmax bb-glyph) (zpb-ttf:xmin bb-glyph)))
+	  (scale-y (- (zpb-ttf:ymax bb-glyph) (zpb-ttf:ymin bb-glyph))))
       (setf (scaler-of gl-text) scaler)
       (setf (scale-to-unit-of gl-text) (/ scaler (zpb-ttf:units/em font)))
       (paths-ttf:paths-from-glyph (zpb-ttf:find-glyph char font)
 				  :offset (paths:make-point (+ shift
 							       (* em
-								  (- (/ (zpb-ttf:xmin bb) scaler))))
-							    (+ (1- em)
+								  (- (/ (zpb-ttf:xmin bb-glyph) scale-x))))
+							    (+ (1+ em)
 							       (* em
-								  (/ (zpb-ttf:ymin bb) scaler))))
-				  :scale-x (/ em scaler)
-				  :scale-y (- (/ em scaler))))))
+								  (/ (zpb-ttf:ymin bb-glyph) scale-y))))
+				  :scale-x (/ em scale-x)
+				  :scale-y (- (/ em scale-y))))))
 
 (defun compute-actual-slice (char gl-text)
   (let ((font (font-loader-of gl-text)))
@@ -100,7 +126,7 @@
 			 (aref tex-array (- h y) x 1) g
 			 (aref tex-array (- h y) x 2) b
 			 (aref tex-array (- h y) x 3) (clamp alpha 0 255))
-		   (warn "Out of bounds: ~a ~a" x y))))
+		   (warn "Out of bounds: ~a ~a" (- h y) x))))
 	(aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)))))
 
 (defun send-texture (new-texture gl-text)
@@ -119,29 +145,27 @@
       (cl-opengl:tex-image-2d :texture-2d 0 :rgba (array-dimension new-texture 1)
 			      (array-dimension new-texture 0) 0 :rgba :unsigned-byte tex-pointer))))
 
-(defun old-chars-reinsert-add-new (charh new-char new-count new-count-ext gl-text)
+(defun old-chars-reinsert-add-new (charh new-char new-count new-count-ext)
   (let ((old-chars (sort (hash-table-alist charh)
 			 #'< :key #'(lambda (k)
 				      (aref (cdr k) 0 0))))
 	(new-charh (make-hash-table)))
     (iter (for (old-char . nil) in old-chars)
 	  (for i from 0)
-	  (for (xmin ymin xmax ymax) next (compute-actual-slice old-char gl-text))
 	  (setf (gethash old-char new-charh)
 		(make-array '(4 2)
 			    :initial-contents
-			    (list (list (float (/ (+ i xmin) new-count-ext)) ymin)
-				  (list (float (/ (+ i xmax) new-count-ext)) ymin)
-				  (list (float (/ (+ i xmax) new-count-ext)) ymax)
-				  (list (float (/ (+ i xmin) new-count-ext)) ymax)))))
-    (destructuring-bind (xmin ymin xmax ymax) (compute-actual-slice new-char gl-text)
-     (setf (gethash new-char new-charh)
-	   (make-array '(4 2)
-		       :initial-contents
-		       (list (list (float (/ (+ (1- new-count) xmin) new-count-ext)) ymin)
-			     (list (float (/ (+ (1- new-count) xmax) new-count-ext)) ymin)
-			     (list (float (/ (+ (1- new-count) xmax) new-count-ext)) ymax)
-			     (list (float (/ (+ (1- new-count) xmin) new-count-ext)) ymax)))))
+			    (list (list (float (/ i new-count-ext)) 0.0)
+				  (list (float (/ (1+ i) new-count-ext)) 0.0)
+				  (list (float (/ (1+ i) new-count-ext)) 1.0)
+				  (list (float (/ i new-count-ext)) 1.0)))))
+    (setf (gethash new-char new-charh)
+	  (make-array '(4 2)
+		      :initial-contents
+		      (list (list (float (/ (1- new-count) new-count-ext)) 0.0)
+			    (list (float (/ new-count new-count-ext)) 0.0)
+			    (list (float (/ new-count new-count-ext)) 1.0)
+			    (list (float (/ (1- new-count) new-count-ext)) 1.0))))
     new-charh))
 
 (defgeneric add-char (char gl-text)
@@ -163,9 +187,10 @@
 			    :target-range `(:all (0 ,(1- (array-dimension (texture-of gl-text) 1))) :all)))
 	    (draw-char-on char new-texture (* em (hash-table-count charh)) gl-text)
 	    (setf (character-hash-of gl-text)
-		  (old-chars-reinsert-add-new charh char new-count new-count-ext gl-text))
+		  (old-chars-reinsert-add-new charh char new-count new-count-ext))
 	    (setf (texture-of gl-text) new-texture)
-	    (send-texture new-texture gl-text)))))))
+	    (send-texture new-texture gl-text)
+	    (gethash char (character-hash-of gl-text))))))))
 
 (defgeneric get-char-texture-coords (char gl-text)
   (:method ((char character) (gl-text opengl-text))
