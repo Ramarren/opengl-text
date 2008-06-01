@@ -113,6 +113,8 @@
 
 (defgeneric draw-gl-string (string gl-text)
   (:method ((string string) (gl-text opengl-text))
+    ;; ensure that all characters are in a texture (adding characters changes coords)
+    (map nil (rcurry #'get-char-texture-coords gl-text) (remove-duplicates string))
     (let ((l (length string)))
      (let ((vertices (make-ffa (list (* 4 l) 3) :float))
 	   (tex-coords (make-ffa (list (* 4 l) 2) :float)))
