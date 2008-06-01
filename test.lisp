@@ -45,6 +45,9 @@
        (gl:vertex 1 1 -1)
        (gl:vertex 0 1 -1))
      (draw-gl-string str gl-text)
+     (gl:translate 0 -0.4 0)
+     (gl:rotate 30 0 0 1)
+     (draw-gl-string str gl-text :kerning nil)
      (gl:bind-texture :texture-2d (opengl-text::texture-number-of gl-text))
      (gl:tex-env :texture-env :texture-env-mode :decal)
      (gl:with-primitive :quads
