@@ -7,6 +7,8 @@
   ((font-loader :initarg :font :accessor font-loader-of)
    (emsquare :initarg :emsquare :initform 64 :accessor emsquare-of)
    (scaler :accessor scaler-of :initform nil)
+   (scale-to-unit :accessor scale-to-unit-of :initform nil)
+   (color :accessor color-of :initarg :color :initform (list 255 255 255))
    (texture :initform nil :accessor texture-of)
    (texture-number :initform nil :accessor texture-number-of)
    (character-hash :initform (make-hash-table) :accessor character-hash-of)))
@@ -23,7 +25,31 @@
 (defmethod (setf emsquare-of) :after (new-value (object opengl-text))
   (when *coerce-em-to-power-of-two*
     (setf (slot-value object 'emsquare)
-	  (ceiling-power-of-two (emsquare-of object)))))
+	  (ceiling-power-of-two (emsquare-of object))))
+  (flush-texture object :new-texture-array t))
+
+(defgeneric flush-texture (gl-text &key new-texture-array)
+  (:method ((gl-text opengl-text) &key (new-texture-array nil))
+    ;; not the most efficient method
+    (let ((chars (iter (for (key nil) in-hashtable (character-hash-of gl-text))
+		       (collect key))))
+      (setf (character-hash-of gl-text) (make-hash-table))
+      (if new-texture-array
+	  (setf (texture-of gl-text) nil)
+	  (array-map! (constantly 0) (find-original-array (texture-of gl-text))))
+      (mapc (rcurry #'get-char-texture-coords gl-text) chars))))
+
+(defmethod (setf color-of) :after (new-value (object opengl-text))
+  (declare (ignore new-value))
+  (flush-texture object))
+
+(defmethod (setf font-loader-of) :after (new-value (object opengl-text))
+  (declare (ignore new-value))
+  (flush-texture object))
+
+(defgeneric ensure-characters (characters gl-text)
+  (:method ((characters sequence) (gl-text opengl-text))
+    (map nil (rcurry #'get-char-texture-coords gl-text) characters)))
 
 (defun draw-char-on (char tex-array shift gl-text)
   (let ((bb (zpb-ttf:bounding-box (font-loader-of gl-text))))
@@ -32,6 +58,7 @@
 		       (- (zpb-ttf:ymax bb)
 			  (zpb-ttf:ymin bb)))))
       (setf (scaler-of gl-text) scaler)
+      (setf (scale-to-unit-of gl-text) (/ scaler (zpb-ttf:units/em (font-loader-of gl-text))))
       (let ((char-path (paths-ttf:paths-from-glyph (zpb-ttf:find-glyph char (font-loader-of gl-text))
 						   :offset (paths:make-point (+ shift
 										(* (emsquare-of gl-text)
@@ -43,14 +70,15 @@
 						   :scale-y (- (/ (emsquare-of gl-text) scaler))))
 	    (aa-state (aa:make-state))
 	    (h (array-dimension tex-array 0)))
-	(flet ((draw-function (x y alpha)
-		 (if (array-in-bounds-p tex-array (- h y) x 0)
-		     (setf (aref tex-array (- h y) x 0) 255
-			   (aref tex-array (- h y) x 1) 255
-			   (aref tex-array (- h y) x 2) 255
-			   (aref tex-array (- h y) x 3) (clamp alpha 0 255))
-		     (warn "Out of bounds: ~a ~a" x y))))
-	  (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function))))))
+	(destructuring-bind (r g b) (color-of gl-text)
+	 (flet ((draw-function (x y alpha)
+		  (if (array-in-bounds-p tex-array (- h y) x 0)
+		      (setf (aref tex-array (- h y) x 0) r
+			    (aref tex-array (- h y) x 1) g
+			    (aref tex-array (- h y) x 2) b
+			    (aref tex-array (- h y) x 3) (clamp alpha 0 255))
+		      (warn "Out of bounds: ~a ~a" x y))))
+	   (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)))))))
 
 (defgeneric add-char (char gl-text)
   (:method ((char character) (gl-text opengl-text))
@@ -61,7 +89,7 @@
 			    (ceiling-power-of-two (* em new-count))
 			    (* em new-count))))
 	  (let ((new-texture (if (or (null (texture-of gl-text))
-				     (> new-size (array-dimension (texture-of gl-text) 0)))
+				     (> new-size (array-dimension (texture-of gl-text) 1)))
 				 (make-ffa (list em new-size 4) :uint8)
 				 (texture-of gl-text)))
 		(new-charh (make-hash-table))
@@ -117,8 +145,7 @@
 
 (defgeneric draw-gl-string (string gl-text &key kerning)
   (:method ((string string) (gl-text opengl-text) &key (kerning t))
-    ;; ensure that all characters are in a texture (adding characters changes coords)
-    (map nil (rcurry #'get-char-texture-coords gl-text) (remove-duplicates string))
+    (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string)))
      (let ((vertices (make-ffa (list (* 4 l) 3) :float))
 	   (tex-coords (make-ffa (list (* 4 l) 2) :float)))
@@ -151,4 +178,14 @@
 	 (gl:tex-env :texture-env :texture-env-mode :replace)
 	 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
 	 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
-	 (gl:draw-arrays :quads 0 (* 4 (length string))))))))
+	 (gl:with-pushed-matrix
+	   (gl:scale (scale-to-unit-of gl-text)
+		     (scale-to-unit-of gl-text)
+		     1.0)
+	   (let ((font (font-loader-of gl-text)))
+	    (gl:translate (/ (- (zpb-ttf:xmin (zpb-ttf:bounding-box font))
+				(zpb-ttf:xmin (zpb-ttf:bounding-box (zpb-ttf:find-glyph (char string 0) font))))
+			     (scaler-of gl-text))
+			  (/ (zpb-ttf:descender font) (scaler-of gl-text))
+			  0))
+	   (gl:draw-arrays :quads 0 (* 4 (length string)))))))))
