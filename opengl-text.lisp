@@ -86,8 +86,8 @@
 		(list (/ (- (zpb-ttf:xmin bb-glyph) x-edge) base)
 		      (/ (- (zpb-ttf:ymin bb-glyph) y-edge) base)
 		      (/ (- (zpb-ttf:xmax bb-glyph) x-edge) base)
-		      (/ (- (max (zpb-ttf:ymax bb-glyph)
-				 (zpb-ttf:xmax bb-glyph)) (min x-edge y-edge)) base)))))))
+		      (+ (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base)
+			 (/ 4 (emsquare-of gl-text)))))))))
 
 (defun draw-char-on (char tex-array shift gl-text)
   (let ((char-path (create-char-path char shift gl-text))
