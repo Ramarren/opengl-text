@@ -46,14 +46,16 @@
 	 (draw-char-on char new-texture (* em (hash-table-count charh)) gl-text)
 	 (let ((old-chars (sort (hash-table-alist charh)
 				#'< :key #'(lambda (k)
-					     (aref (cdr k) 0)))))
+					     (aref (cdr k) 0 0)))))
 	   (iter (for (old-char . nil) in old-chars)
 		 (for i from 0)
 		 (setf (gethash old-char new-charh)
-		       (vector (float (/ i new-count))
-			       (float 0)
-			       (float (/ (1+ i) new-count))
-			       (float 1))))
+		       (make-array '(4 2)
+				   :initial-contents
+				   (list (list (float (/ i new-count)) (float 0))
+					 (list (float (/ (1+ i) new-count)) (float 0))
+					 (list (float (/ (1+ i) new-count)) (float 1))
+					 (list (float (/ i new-count)) (float 1))))))
 	   (setf (character-hash-of gl-text) new-charh)
 	   (setf (texture-of gl-text) new-texture)
 	   (when *opengl-active*
@@ -69,10 +71,12 @@
 	       (cl-opengl:tex-image-2d :texture-2d 0 :rgba (array-dimension new-texture 0)
 				       (array-dimension new-texture 1) 0 :rgba :unsigned-byte tex-pointer)))
 	   (setf (gethash char new-charh)
-		 (vector (float (/ (1- new-count) new-count))
-			 (float 0)
-			 (float 1)
-			 (float 1)))))))))
+		 (make-array '(4 2)
+			     :initial-contents
+			     (list (list (float (/ (1- new-count) new-count)) (float 0))
+				   (list (float 1) (float 0))
+				   (list (float 1) (float 1))
+				   (list (float (/ (1- new-count) new-count)) (float 1)))))))))))
 
 
 (defgeneric get-char-texture-coords (char gl-text)
@@ -81,3 +85,22 @@
       (if char-coords
 	  char-coords
 	  (add-char char gl-text)))))
+
+(defgeneric draw-gl-string (string gl-text)
+  (:method ((string string) (gl-text opengl-text))
+    (let ((l (length string)))
+     (let ((vertices (make-ffa (list (* 4 l) 3) :float))
+	   (tex-coords (make-ffa (list (* 4 l) 2) :float)))
+       (iter (for c in-string string)
+	     (for i from 0 by 4)
+	     (for k from 0.0)
+	     (let ((vertex (make-array '(4 3)
+				       :initial-contents
+				       (list (list k 0.0 0.0)
+					     (list (1+ k) 0.0 0.0)
+					     (list (1+ k) 1.0 0.0)
+					     (list k 1.0 0.0))))
+		   (tex-coord (get-char-texture-coords c gl-text)))
+	       (map-subarray vertex vertices :target-range `((,i ,(+ i 3)) :all))
+	       (map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all))))
+       (list vertices tex-coords)))))
