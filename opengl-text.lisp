@@ -143,8 +143,8 @@
 	  char-coords
 	  (add-char char gl-text)))))
 
-(defgeneric draw-gl-string (string gl-text &key kerning)
-  (:method ((string string) (gl-text opengl-text) &key (kerning t))
+(defgeneric draw-gl-string (string gl-text &key kerning depth-shift)
+  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0))
     (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string)))
      (let ((vertices (make-ffa (list (* 4 l) 3) :float))
@@ -155,6 +155,7 @@
 	     (for g next (zpb-ttf:find-glyph c font))
 	     (for gp previous g initially nil)
 	     (for i from 0 by 4)
+	     (for j from 0)
 	     (for k initially 0.0 then (+ k
 					  (/ (+ (zpb-ttf:advance-width g)
 						(if (and gp kerning)
@@ -163,10 +164,10 @@
 					     scaler)))
 	     (let ((vertex (make-array '(4 3)
 				       :initial-contents
-				       (list (list k 0.0 0.0)
-					     (list (1+ k) 0.0 0.0)
-					     (list (1+ k) 1.0 0.0)
-					     (list k 1.0 0.0))))
+				       (list (list k 0.0 (* j depth-shift))
+					     (list (1+ k) 0.0 (* j depth-shift))
+					     (list (1+ k) 1.0 (* j depth-shift))
+					     (list k 1.0 (* j depth-shift)))))
 		   (tex-coord (get-char-texture-coords c gl-text)))
 	       (map-subarray vertex vertices :target-range `((,i ,(+ i 3)) :all))
 	       (map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all))))
