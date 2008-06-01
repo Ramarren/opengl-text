@@ -25,7 +25,7 @@
   (cl-opengl:matrix-mode :modelview)
   (cl-opengl:load-identity))
 
-(defun test-simple-draw-string ()
+(defun test-simple-draw-string (str)
   (gl:enable :texture-2d)
   (gl:enable :blend)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
@@ -44,5 +44,5 @@
        (gl:vertex 1 1 -1)
        (gl:vertex 0 1 -1))
      (print (gl:get-error))
-     (draw-gl-string "abc" gl-text)
+     (draw-gl-string str gl-text)
      (gl-swap-buffers))))
