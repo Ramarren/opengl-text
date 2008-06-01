@@ -43,5 +43,6 @@
        (gl:vertex 1 0 -1)
        (gl:vertex 1 1 -1)
        (gl:vertex 0 1 -1))
+     (print (gl:get-error))
      (draw-gl-string "abc" gl-text)
      (gl-swap-buffers))))
