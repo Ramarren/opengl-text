@@ -1,4 +1,4 @@
-(defpackage :opengl-text-test (:use :cl :opengl-text :sdl))
+(defpackage :opengl-text-test (:use :cl :opengl-text :sdl :iterate))
 
 (in-package :opengl-text-test)
 
@@ -64,3 +64,30 @@
        (gl:tex-coord 1 0)
        (gl:vertex 0 -2 -1))
      (gl-swap-buffers))))
+
+(defun test-anim-draw-string (string)
+  (gl:enable :texture-2d)
+  (gl:enable :blend)
+  (gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:enable-client-state :vertex-array)
+  (gl:enable-client-state :texture-coord-array)
+  (gl:matrix-mode :modelview)
+  (zpb-ttf:with-font-loader (font "/usr/share/fonts/dejavu/DejaVuSerif.ttf")
+   (let ((gl-text (make-instance 'opengl-text :font font)))
+     (iter (for i from 0)
+	   (until (iter (for ev next (poll-event))
+			(thereis (sdl::quit-event-p ev))
+			(until (eql 0 ev))))
+	   (gl:clear :color-buffer-bit :depth-buffer-bit)
+	   (gl:load-identity)
+	   (gl:translate -1 0 -8)
+	   (gl:scale 0.4 0.4 0.4)
+	   (gl:with-pushed-matrix
+	     (gl:rotate (mod i 360) 0 0 1)
+	     (draw-gl-string string gl-text))
+	   (gl:with-pushed-matrix
+	     (gl:translate 0 -2 2)
+	     (gl:rotate (mod i 360) 0 1 0)
+	     (draw-gl-string string gl-text))
+	   (gl-swap-buffers)
+	   (sleep 0.01)))))
