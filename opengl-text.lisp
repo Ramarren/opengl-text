@@ -56,6 +56,18 @@
 			       (float 1))))
 	   (setf (character-hash-of gl-text) new-charh)
 	   (setf (texture-of gl-text) new-texture)
+	   (when *opengl-active*
+	     (with-pointer-to-array (new-texture tex-pointer
+				     :uint8
+				     (reduce #'* (array-dimensions new-texture))
+				     :copy-in)
+	       (if (texture-number-of gl-text)
+		   (cl-opengl:bind-texture :texture-2d (texture-number-of gl-text))
+		   (let ((new-number (car (cl-opengl:gen-textures 1))))
+		     (setf (texture-number-of gl-text) new-number)
+		     (cl-opengl:bind-texture :texture-2d new-number)))
+	       (cl-opengl:tex-image-2d :texture-2d 0 :rgba (array-dimension new-texture 0)
+				       (array-dimension new-texture 1) 0 :rgba :unsigned-byte tex-pointer)))
 	   (setf (gethash char new-charh)
 		 (vector (float (/ (1- new-count) new-count))
 			 (float 0)
