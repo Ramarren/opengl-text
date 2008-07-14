@@ -16,9 +16,25 @@
 	      :all)))))
 
 (defun copy-character (source-array source-cell target-array target-cell em)
-  (map-subarray source-array target-array
+  #+(or) (map-subarray source-array target-array
 		:source-range (cell-range source-cell em source-array)
-		:target-range (cell-range target-cell em target-array)))
+		:target-range (cell-range target-cell em target-array))
+  (destructuring-bind ((sxmin sxmax) (symin symax) srgba) (cell-range source-cell em source-array)
+    (assert (eql srgba :all))
+    (destructuring-bind ((txmin txmax) (tymin tymax) trgba) (cell-range target-cell em target-array)
+      (assert (eql trgba :all))
+      (iter (for sx from sxmin to sxmax)
+	    (for tx from txmin to txmax)
+	    (iter (for sy from symin to symax)
+		  (for ty from tymin to tymax)
+		  (setf (aref target-array tx ty 0)
+			(aref source-array sx sy 0)
+			(aref target-array tx ty 1)
+			(aref source-array sx sy 1)
+			(aref target-array tx ty 2)
+			(aref source-array sx sy 2)
+			(aref target-array tx ty 3)
+			(aref source-array sx sy 3)))))))
 
 (defun make-new-texture-array (em len)
   (let ((h (maybe-ceiling-power-of-two (* em (ceiling (sqrt len))))))
