@@ -9,6 +9,11 @@
       (when (zerop scale-x) (setf scale-x 1))
       (when (zerop scale-y) (setf scale-y 1))
       (paths-ttf:paths-from-glyph (zpb-ttf:find-glyph char font)
+				  :offset (paths:make-point (* em
+							       (- (/ (zpb-ttf:xmin bb-glyph) scale-x)))
+							    (+ (1+ em)
+							       (* em
+								  (/ (zpb-ttf:ymin bb-glyph) scale-y))))
 				  :scale-x (/ em scale-x)
 				  :scale-y (- (/ em scale-y))))))
 
