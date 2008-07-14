@@ -18,15 +18,32 @@
 	(when (and gp kerning)
 	  (incf k (/ (zpb-ttf:kerning-offset gp g font) scaler)))
 	(for (xmin ymin xmax ymax) next (compute-actual-slice c gl-text))
-	(let ((vertex (make-array '(4 3)
-				  :initial-contents
-				  (list (list (+ k xmin) ymin (* j depth-shift))
-					(list (- (1+ k) (- 1 xmax)) ymin (* j depth-shift))
-					(list (- (1+ k) (- 1 xmax)) ymax (* j depth-shift))
-					(list (+ k xmin) ymax (* j depth-shift)))))
-	      (tex-coord (get-char-texture-coords c gl-text)))
-	  (map-subarray vertex vertices :target-range `((,i ,(+ i 3)) :all))
-	  (map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all)))
+	#+(or)(let ((vertex (make-array '(4 3)
+					:initial-contents
+					(list (list (+ k xmin) ymin (* j depth-shift))
+					      (list (- (1+ k) (- 1 xmax)) ymin (* j depth-shift))
+					      (list (- (1+ k) (- 1 xmax)) ymax (* j depth-shift))
+					      (list (+ k xmin) ymax (* j depth-shift)))))
+		    (tex-coord (get-char-texture-coords c gl-text)))
+		(map-subarray vertex vertices :target-range `((,i ,(+ i 3)) :all))
+		(map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all)))
+	(setf (aref vertices i 0) (+ k xmin)
+	      (aref vertices i 1) ymin
+	      (aref vertices i 2) (* j depth-shift)
+	      (aref vertices (+ i 1) 0) (- (1+ k) (- 1 xmax))
+	      (aref vertices (+ i 1) 1) ymin
+	      (aref vertices (+ i 1) 2) (* j depth-shift)
+	      (aref vertices (+ i 2) 0) (- (1+ k) (- 1 xmax))
+	      (aref vertices (+ i 2) 1) ymax
+	      (aref vertices (+ i 2) 2) (* j depth-shift)
+	      (aref vertices (+ i 3) 0) (+ k xmin)
+	      (aref vertices (+ i 3) 1) ymax
+	      (aref vertices (+ i 3) 2) (* j depth-shift))
+	(let ((tex-coord (get-char-texture-coords c gl-text)))
+	 (iter (for ii from i to (+ i 3))
+	       (for k from 0)
+	       (setf (aref tex-coords ii 0) (aref tex-coord k 0)
+		     (aref tex-coords ii 1) (aref tex-coord k 1))))
 	(sum (/ (+ (zpb-ttf:advance-width g)) scaler) into k)))
 
 (defgeneric draw-gl-string (string gl-text &key kerning depth-shift vertices tex-coords)
