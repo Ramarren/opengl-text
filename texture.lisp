@@ -41,7 +41,7 @@
 	    (let ((vec (find-original-array (texture-of gl-text))))
 	     (iter (for i index-of-vector vec)
 		   (setf (aref vec i) 0))))
-	(mapc (rcurry #'get-char-texture-coords gl-text) chars)))))
+	(ensure-characters chars gl-text)))))
 
 (defun send-texture (new-texture gl-text)
   (when *opengl-active*
