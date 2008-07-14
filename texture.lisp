@@ -15,6 +15,11 @@
 	      (list (* em y) (1- (* em (1+ y))))
 	      :all)))))
 
+(defun copy-character (source-array source-cell target-array target-cell em)
+  (map-subarray source-array target-array
+		:source-range (cell-range source-cell em source-array)
+		:target-range (cell-range target-cell em target-array)))
+
 (defun make-new-texture-array (em len)
   (let ((h (maybe-ceiling-power-of-two (* em (ceiling (sqrt len))))))
     (make-ffa (list h

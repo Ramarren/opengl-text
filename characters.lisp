@@ -103,3 +103,17 @@
 	  (setf (texture-of gl-text) new-texture)
 	  (send-texture new-texture gl-text)
 	  (gethash char (character-hash-of gl-text)))))))
+
+(defgeneric ensure-characters (characters gl-text)
+  (:method ((characters sequence) (gl-text opengl-text))
+    (let ((chars-loaded (hash-table-keys (character-hash-of gl-text)))
+	  (texture (texture-of gl-text))
+	  (em (emsquare-of gl-text)))
+      (let ((more-chars (set-difference (coerce characters 'list) chars-loaded)))
+	(when more-chars
+	  (let ((chars (append chars-loaded more-chars)))
+	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
+	    (when chars-loaded
+	      (iter (for cell from 0 below chars-loaded)
+		    (copy-character texture cell (texture-of gl-text) cell em)))
+	    (map nil (rcurry #'get-char-texture-coords gl-text) more-chars)))))))
