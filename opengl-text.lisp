@@ -207,12 +207,8 @@
 	(for gp previous g initially nil)
 	(for i from 0 by 4)
 	(for j from 0)
-	(for k initially 0.0 then (+ k
-				     (/ (+ (zpb-ttf:advance-width g)
-					   (if (and gp kerning)
-					       (zpb-ttf:kerning-offset gp g font)
-					       0))
-					scaler)))
+	(when (and gp kerning)
+	  (incf k (/ (zpb-ttf:kerning-offset gp g font) scaler)))
 	(for (xmin ymin xmax ymax) next (compute-actual-slice c gl-text))
 	(let ((vertex (make-array '(4 3)
 				  :initial-contents
@@ -222,7 +218,8 @@
 					(list (+ k xmin) ymax (* j depth-shift)))))
 	      (tex-coord (get-char-texture-coords c gl-text)))
 	  (map-subarray vertex vertices :target-range `((,i ,(+ i 3)) :all))
-	  (map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all)))))
+	  (map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all)))
+	(sum (/ (+ (zpb-ttf:advance-width g)) scaler) into k)))
 
 (defgeneric draw-gl-string (string gl-text &key kerning depth-shift)
   (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0))
