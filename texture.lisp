@@ -1,19 +1,19 @@
 (in-package :opengl-text)
 
-(defvar *coerce-em-to-power-of-two* t)
-
-(defun ceiling-power-of-two (number)
-  (expt 2 (ceiling (log number 2))))
-
-(defun maybe-ceiling-power-of-two (number)
-  (declare (inline ceiling-power-of-two))
-  (if *coerce-em-to-power-of-two*
-      (ceiling-power-of-two number)
-      number))
-
 (defun character-cells (em array)
   (destructuring-bind (h w) (butlast (array-dimensions array))
     (* (/ h em) (/ w em))))
+
+(defun cell-range (cell em array)
+  "Return affi range for cell in array with emsquare em."
+  (destructuring-bind (aw ah) (butlast (array-dimensions array))
+    (let ((x (mod cell (/ aw em))))
+      (let ((y (floor (/ cell (/ aw em)))))
+	(assert (< x (/ aw em)))
+	(assert (< y (/ ah em)))
+	(list (list (* em x) (1- (* em (1+ x))))
+	      (list (* em y) (1- (* em (1+ y))))
+	      :all)))))
 
 (defun make-new-texture-array (em len)
   (let ((h (maybe-ceiling-power-of-two (* em (ceiling (sqrt len))))))
