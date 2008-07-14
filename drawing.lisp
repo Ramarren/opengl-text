@@ -29,12 +29,16 @@
 	  (map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all)))
 	(sum (/ (+ (zpb-ttf:advance-width g)) scaler) into k)))
 
-(defgeneric draw-gl-string (string gl-text &key kerning depth-shift)
-  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0))
+(defgeneric draw-gl-string (string gl-text &key kerning depth-shift vertices tex-coords)
+  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0) (vertices nil) (tex-coords nil))
     (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string)))
-     (let ((vertices (make-ffa (list (* 4 l) 3) :float))
-	   (tex-coords (make-ffa (list (* 4 l) 2) :float)))
+     (let ((vertices (if vertices
+			 vertices
+			 (make-ffa (list (* 4 l) 3) :float)))
+	   (tex-coords (if tex-coords
+			   tex-coords
+			   (make-ffa (list (* 4 l) 2) :float))))
        (generate-vertices vertices tex-coords string gl-text kerning depth-shift)
        (with-pointers-to-arrays ((vertices v-pointer :float (length (find-original-array vertices)) :copy-in)
 				 (tex-coords t-pointer :float (length (find-original-array tex-coords)) :copy-in))
