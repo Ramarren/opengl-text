@@ -47,7 +47,7 @@
 			  (zpb-ttf:xmin bb))
 		       (- (zpb-ttf:ymax bb)
 			  (zpb-ttf:ymin bb)))))
-      (setf (scaler-of gl-text) scaler)
-      (setf (scale-to-unit-of gl-text) (/ scaler (zpb-ttf:units/em new-value)))))
+      (setf (scaler-of object) scaler)
+      (setf (scale-to-unit-of object) (/ scaler (zpb-ttf:units/em new-value)))))
   (flush-texture object))
 
