@@ -53,18 +53,20 @@
 
 (defun transform-cell (cell array em)
   "Transform cell to relative coordinates (OpenGL TexCoords)."
-  (destructuring-bind ((xmin xmax) (ymin ymax) rgba) (cell-range cell em array)
+  (destructuring-bind ((ymin ymax) (xmin xmax) rgba) (cell-range cell em array)
     (assert (eql rgba :all));sanity check
-    (destructuring-bind (w h rgba) (array-dimensions array)
+    (destructuring-bind (h w rgba) (array-dimensions array)
       (assert (= rgba 4));sanity check
-      (make-array '(4 2)
-		  :element-type 'single-float
-		  :initial-contents
-		  (mapcar (curry #'mapcar #'float)
-			  (list (list (/ xmin w) (/ ymin h))
-				(list (/ xmax w) (/ ymin h))
-				(list (/ xmax w) (/ ymax h))
-				(list (/ xmin w) (/ ymax h))))))))
+      (let ((xmax (1+ xmax))
+	    (ymax (1+ ymax)))
+       (make-array '(4 2)
+		   :element-type 'single-float
+		   :initial-contents
+		   (mapcar (curry #'mapcar #'float)
+			   (list (list (/ xmin w) (/ ymin h))
+				 (list (/ xmax w) (/ ymin h))
+				 (list (/ xmax w) (/ ymax h))
+				 (list (/ xmin w) (/ ymax h)))))))))
 
 (defun old-chars-reinsert-add-new (new-char character-hash character-cells cell array em)
   "Return a hash table with coordinates relative to array, with new character added to cell.
