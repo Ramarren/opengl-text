@@ -1,21 +1,14 @@
 (in-package :opengl-text)
 
 (defun create-char-path (char shift gl-text)
-  (let ((bb (zpb-ttf:bounding-box (font-loader-of gl-text)))
-	(bb-glyph (zpb-ttf:bounding-box (zpb-ttf:find-glyph char (font-loader-of gl-text))))
+  (let ((bb-glyph (zpb-ttf:bounding-box (zpb-ttf:find-glyph char (font-loader-of gl-text))))
 	(em (1- (emsquare-of gl-text)))
 	(font (font-loader-of gl-text)))
-    (let ((scaler (max (- (zpb-ttf:xmax bb)
-			  (zpb-ttf:xmin bb))
-		       (- (zpb-ttf:ymax bb)
-			  (zpb-ttf:ymin bb))))
-	  (scale-x (- (zpb-ttf:xmax bb-glyph) (zpb-ttf:xmin bb-glyph)))
+    (let ((scale-x (- (zpb-ttf:xmax bb-glyph) (zpb-ttf:xmin bb-glyph)))
 	  (scale-y (- (zpb-ttf:ymax bb-glyph) (zpb-ttf:ymin bb-glyph))))
       ;; whitespace has no extent
       (when (zerop scale-x) (setf scale-x 1))
       (when (zerop scale-y) (setf scale-y 1))
-      (setf (scaler-of gl-text) scaler)
-      (setf (scale-to-unit-of gl-text) (/ scaler (zpb-ttf:units/em font)))
       (paths-ttf:paths-from-glyph (zpb-ttf:find-glyph char font)
 				  :offset (paths:make-point (+ shift
 							       (* em

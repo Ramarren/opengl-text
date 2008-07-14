@@ -26,7 +26,10 @@
   (declare (ignore initargs))
   (when *coerce-em-to-power-of-two*
     (setf (emsquare-of instance)
-	  (ceiling-power-of-two (emsquare-of instance)))))
+	  (ceiling-power-of-two (emsquare-of instance))))
+  ;; force :after method on setf to run, so that scaler field is initialized
+  (when (font-loader-of instance)
+   (setf (font-loader-of instance) (font-loader-of instance))))
 
 (defmethod (setf emsquare-of) :after (new-value (object opengl-text))
   (when *coerce-em-to-power-of-two*
@@ -39,6 +42,12 @@
   (flush-texture object))
 
 (defmethod (setf font-loader-of) :after (new-value (object opengl-text))
-  (declare (ignore new-value))
+  (let ((bb (zpb-ttf:bounding-box new-value)))
+    (let ((scaler (max (- (zpb-ttf:xmax bb)
+			  (zpb-ttf:xmin bb))
+		       (- (zpb-ttf:ymax bb)
+			  (zpb-ttf:ymin bb)))))
+      (setf (scaler-of gl-text) scaler)
+      (setf (scale-to-unit-of gl-text) (/ scaler (zpb-ttf:units/em new-value)))))
   (flush-texture object))
 
