@@ -108,6 +108,6 @@
 	  (let ((chars (append chars-loaded more-chars)))
 	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
 	    (when chars-loaded
-	      (iter (for cell from 0 below chars-loaded)
+	      (iter (for cell from 0 below (length chars-loaded))
 		    (copy-character texture cell (texture-of gl-text) cell em)))
 	    (map nil (rcurry #'get-char-texture-coords gl-text) more-chars)))))))
