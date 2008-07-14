@@ -69,12 +69,10 @@
 (defun old-chars-reinsert-add-new (new-char character-hash character-cells cell array em)
   "Return a hash table with coordinates relative to array, with new character added to cell.
    Update character-cells hashtable."
-  (let ((old-chars (sort (hash-table-keys character-hash)
-			 #'< :key #'(lambda (k)
-				      (gethash k character-cells))))
+  (let ((old-chars (hash-table-keys character-hash))
 	(new-character-hash (make-hash-table)))
     (iter (for old-char in old-chars)
-	  (for old-cell from 0)
+	  (for old-cell = (gethash old-char character-cells))
 	  (setf (gethash old-char new-character-hash)
 		(transform-cell old-cell array em)))
     (setf (gethash new-char character-cells)
