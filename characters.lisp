@@ -71,7 +71,7 @@
    Update character-cells hashtable."
   (let ((old-chars (sort (hash-table-keys character-hash)
 			 #'< :key #'(lambda (k)
-				      (gethash (car k) character-cells))))
+				      (gethash k character-cells))))
 	(new-character-hash (make-hash-table)))
     (iter (for old-char in old-chars)
 	  (for old-cell from 0)
