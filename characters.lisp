@@ -77,6 +77,8 @@
 		(transform-cell old-cell array em)))
     (setf (gethash new-char character-cells)
 	  cell)
+    (assert (equal (remove-duplicates (hash-table-values character-cells))
+		   (hash-table-values character-cells)))
     (setf (gethash new-char new-character-hash)
 	  (transform-cell cell array em))
     new-character-hash))
