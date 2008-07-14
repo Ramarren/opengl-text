@@ -1,6 +1,16 @@
 (in-package :opengl-text)
 
 (defvar *opengl-active* t)
+(defvar *coerce-em-to-power-of-two* t)
+
+(defun ceiling-power-of-two (number)
+  (expt 2 (ceiling (log number 2))))
+
+(defun maybe-ceiling-power-of-two (number)
+  (declare (inline ceiling-power-of-two))
+  (if *coerce-em-to-power-of-two*
+      (ceiling-power-of-two number)
+      number))
 
 (defclass opengl-text ()
   ((font-loader :initarg :font :accessor font-loader-of)
