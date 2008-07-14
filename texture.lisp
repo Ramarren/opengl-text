@@ -34,6 +34,7 @@
 	  (em (emsquare-of gl-text)))
       (when chars
 	(setf (character-hash-of gl-text) (make-hash-table))
+	(setf (character-cells-of gl-text) (make-hash-table))
 	(if new-texture-array
 	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
 	    (let ((vec (find-original-array (texture-of gl-text))))
