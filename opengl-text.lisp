@@ -85,6 +85,9 @@
 			  (zpb-ttf:ymin bb))))
 	  (scale-x (- (zpb-ttf:xmax bb-glyph) (zpb-ttf:xmin bb-glyph)))
 	  (scale-y (- (zpb-ttf:ymax bb-glyph) (zpb-ttf:ymin bb-glyph))))
+      ;; whitespace has no extent
+      (when (zerop scale-x) (setf scale-x 1))
+      (when (zerop scale-y) (setf scale-y 1))
       (setf (scaler-of gl-text) scaler)
       (setf (scale-to-unit-of gl-text) (/ scaler (zpb-ttf:units/em font)))
       (paths-ttf:paths-from-glyph (zpb-ttf:find-glyph char font)
