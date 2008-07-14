@@ -58,11 +58,13 @@
     (destructuring-bind (w h rgba) (array-dimensions array)
       (assert (= rgba 4));sanity check
       (make-array '(4 2)
+		  :element-type 'single-float
 		  :initial-contents
-		  (list (list (/ xmin w) (/ ymin h))
-			(list (/ xmax w) (/ ymin h))
-			(list (/ xmax w) (/ ymax h))
-			(list (/ xmin w) (/ ymax h)))))))
+		  (mapcar (curry #'mapcar #'float)
+			  (list (list (/ xmin w) (/ ymin h))
+				(list (/ xmax w) (/ ymin h))
+				(list (/ xmax w) (/ ymax h))
+				(list (/ xmin w) (/ ymax h))))))))
 
 (defun old-chars-reinsert-add-new (new-char character-hash character-cells cell array em)
   "Return a hash table with coordinates relative to array, with new character added to cell.
