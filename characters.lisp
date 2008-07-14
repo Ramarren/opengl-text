@@ -98,7 +98,7 @@
 	  (setf (character-hash-of gl-text)
 		(old-chars-reinsert-add-new char charh
 					    (character-cells-of gl-text)
-					    new-count new-texture em))
+					    (1- new-count) new-texture em))
 	  (setf (texture-of gl-text) new-texture)
 	  (send-texture new-texture gl-text)
 	  (gethash char (character-hash-of gl-text)))))))
