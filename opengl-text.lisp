@@ -39,7 +39,7 @@
 	    (setf (texture-of gl-text) (make-ffa (list em
 						       (if *coerce-em-to-power-of-two*
 							   (ceiling-power-of-two (* em (length chars)))
-							  (* em (length chars)))
+							   (* em (length chars)))
 						       4)
 						 :uint8))
 	    (let ((vec (find-original-array (texture-of gl-text))))
