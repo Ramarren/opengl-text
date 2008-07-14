@@ -19,12 +19,12 @@
 	 (out-array (make-array (list em em 4) :initial-element 0)))
      (destructuring-bind (r g b) (color-of gl-text)
        (flet ((draw-function (x y alpha)
-		(if (array-in-bounds-p out-array (- h y) x 0)
-		    (setf (aref out-array (- h y) x 0) r
-			  (aref out-array (- h y) x 1) g
-			  (aref out-array (- h y) x 2) b
-			  (aref out-array (- h y) x 3) (clamp alpha 0 255))
-		    (warn "Out of bounds: ~a ~a" (- h y) x))))
+		(if (array-in-bounds-p out-array (- em y) x 0)
+		    (setf (aref out-array (- em y) x 0) r
+			  (aref out-array (- em y) x 1) g
+			  (aref out-array (- em y) x 2) b
+			  (aref out-array (- em y) x 3) (clamp alpha 0 255))
+		    (warn "Out of bounds: ~a ~a" (- em y) x))))
 	 (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)
 	 out-array)))))
 
