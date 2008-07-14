@@ -12,19 +12,21 @@
 				  :scale-x (/ em scale-x)
 				  :scale-y (- (/ em scale-y))))))
 
-(defun draw-char-on (char tex-array shift gl-text)
-  (let ((char-path (create-char-path char shift gl-text))
-	(aa-state (aa:make-state))
-	(h (array-dimension tex-array 0)))
-    (destructuring-bind (r g b) (color-of gl-text)
-      (flet ((draw-function (x y alpha)
-	       (if (array-in-bounds-p tex-array (- h y) x 0)
-		   (setf (aref tex-array (- h y) x 0) r
-			 (aref tex-array (- h y) x 1) g
-			 (aref tex-array (- h y) x 2) b
-			 (aref tex-array (- h y) x 3) (clamp alpha 0 255))
-		   (warn "Out of bounds: ~a ~a" (- h y) x))))
-	(aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)))))
+(defun draw-char (char gl-text)
+  (let ((em (emsquare-of gl-text)))
+   (let ((char-path (create-char-path char (font-loader-of gl-text) em))
+	 (aa-state (aa:make-state))
+	 (out-array (make-array (list em em 4) :initial-element 0)))
+     (destructuring-bind (r g b) (color-of gl-text)
+       (flet ((draw-function (x y alpha)
+		(if (array-in-bounds-p out-array (- h y) x 0)
+		    (setf (aref out-array (- h y) x 0) r
+			  (aref out-array (- h y) x 1) g
+			  (aref out-array (- h y) x 2) b
+			  (aref out-array (- h y) x 3) (clamp alpha 0 255))
+		    (warn "Out of bounds: ~a ~a" (- h y) x))))
+	 (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)
+	 out-array)))))
 
 (defun compute-actual-slice (char gl-text)
   (let ((font (font-loader-of gl-text)))
