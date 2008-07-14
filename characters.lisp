@@ -46,28 +46,35 @@
 		      (+ (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base)
 			 (/ 4 (emsquare-of gl-text)))))))))
 
-(defun old-chars-reinsert-add-new (charh new-char new-count new-count-ext)
-  (let ((old-chars (sort (hash-table-alist charh)
+(defun transform-cell (cell array em)
+  "Transform cell to relative coordinates (OpenGL TexCoords)."
+  (destructuring-bind ((xmin xmax) (ymin ymax) rgba) (cell-range cell em array)
+    (assert (eql rgba :all));sanity check
+    (destructuring-bind (w h rgba) (array-dimensions array)
+      (assert (= rgba 4));sanity check
+      (make-array '(4 2)
+		  :initial-contents
+		  (list (list (/ xmin w) (/ ymin h))
+			(list (/ xmax w) (/ ymin h))
+			(list (/ xmax w) (/ ymax h))
+			(list (/ xmin w) (/ ymax h)))))))
+
+(defun old-chars-reinsert-add-new (new-char character-hash character-cells cell array em)
+  "Return a hash table with coordinates relative to array, with new character added to cell.
+   Update character-cells hashtable."
+  (let ((old-chars (sort (hash-table-keys character-hash)
 			 #'< :key #'(lambda (k)
-				      (aref (cdr k) 0 0))))
-	(new-charh (make-hash-table)))
-    (iter (for (old-char . nil) in old-chars)
-	  (for i from 0)
-	  (setf (gethash old-char new-charh)
-		(make-array '(4 2)
-			    :initial-contents
-			    (list (list (float (/ i new-count-ext)) 0.0)
-				  (list (float (/ (1+ i) new-count-ext)) 0.0)
-				  (list (float (/ (1+ i) new-count-ext)) 1.0)
-				  (list (float (/ i new-count-ext)) 1.0)))))
-    (setf (gethash new-char new-charh)
-	  (make-array '(4 2)
-		      :initial-contents
-		      (list (list (float (/ (1- new-count) new-count-ext)) 0.0)
-			    (list (float (/ new-count new-count-ext)) 0.0)
-			    (list (float (/ new-count new-count-ext)) 1.0)
-			    (list (float (/ (1- new-count) new-count-ext)) 1.0))))
-    new-charh))
+				      (gethash (car k) character-cells))))
+	(new-character-hash (make-hash-table)))
+    (iter (for old-char in old-chars)
+	  (for old-cell from 0)
+	  (setf (gethash old-char new-character-hash)
+		(transform-cell old-cell array em)))
+    (setf (gethash new-char character-cells)
+	  cell)
+    (setf (gethash new-char new-character-hash)
+	  (transform-cell cell array em))
+    new-character-hash))
 
 (defgeneric add-char (char gl-text)
   (:method ((char character) (gl-text opengl-text))
