@@ -16,6 +16,12 @@
 (defun ceiling-power-of-two (number)
   (expt 2 (ceiling (log number 2))))
 
+(defun maybe-ceiling-power-of-two (number)
+  (declare (inline ceiling-power-of-two))
+  (if *coerce-em-to-power-of-two*
+      (ceiling-power-of-two number)
+      number))
+
 (defmethod initialize-instance :after ((instance opengl-text) &rest initargs)
   (declare (ignore initargs))
   (when *coerce-em-to-power-of-two*
@@ -30,9 +36,7 @@
 
 (defun make-new-texture-array (em len)
   (make-ffa (list em
-		  (if *coerce-em-to-power-of-two*
-		      (ceiling-power-of-two (* em len))
-		      (* em len))
+		  (maybe-ceiling-power-of-two (* em len))
 		  4)
 	    :uint8))
 
@@ -174,9 +178,7 @@
     (let ((charh (character-hash-of gl-text))
 	  (em (emsquare-of gl-text)))
       (let ((new-count (1+ (hash-table-count charh))))
-	(let ((new-size (if *coerce-em-to-power-of-two*
-			    (ceiling-power-of-two (* em new-count))
-			    (* em new-count))))
+	(let ((new-size (maybe-ceiling-power-of-two (* em new-count))))
 	  (let ((new-texture (if (or (null (texture-of gl-text))
 				     (> new-size (array-dimension (texture-of gl-text) 1)))
 				 (make-new-texture-array em new-count)
