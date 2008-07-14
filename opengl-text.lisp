@@ -179,7 +179,7 @@
 			    (* em new-count))))
 	  (let ((new-texture (if (or (null (texture-of gl-text))
 				     (> new-size (array-dimension (texture-of gl-text) 1)))
-				 (make-ffa (list em new-size 4) :uint8)
+				 (make-new-texture-array em new-count)
 				 (texture-of gl-text)))
 		(new-count-ext (/ new-size em)))
 	    (when (and (texture-of gl-text)
