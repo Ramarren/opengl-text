@@ -28,6 +28,14 @@
 	  (ceiling-power-of-two (emsquare-of object))))
   (flush-texture object :new-texture-array t))
 
+(defun make-new-texture-array (em len)
+  (make-ffa (list em
+		  (if *coerce-em-to-power-of-two*
+		      (ceiling-power-of-two (* em len))
+		      (* em len))
+		  4)
+	    :uint8))
+
 (defgeneric flush-texture (gl-text &key new-texture-array)
   (:method ((gl-text opengl-text) &key (new-texture-array nil))
     ;; not the most efficient method
@@ -36,12 +44,7 @@
       (when chars
 	(setf (character-hash-of gl-text) (make-hash-table))
 	(if new-texture-array
-	    (setf (texture-of gl-text) (make-ffa (list em
-						       (if *coerce-em-to-power-of-two*
-							   (ceiling-power-of-two (* em (length chars)))
-							   (* em (length chars)))
-						       4)
-						 :uint8))
+	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
 	    (let ((vec (find-original-array (texture-of gl-text))))
 	     (iter (for i index-of-vector vec)
 		   (setf (aref vec i) 0))))
@@ -63,12 +66,7 @@
       (let ((more-chars (set-difference (coerce characters 'list) chars-loaded)))
 	(when more-chars
 	  (let ((chars (append chars-loaded more-chars)))
-	    (setf (texture-of gl-text) (make-ffa (list em
-						       (if *coerce-em-to-power-of-two*
-							   (ceiling-power-of-two (* em (length chars)))
-							   (* em (length chars)))
-						       4)
-						 :uint8))
+	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
 	    (when chars-loaded
 	      (map-subarray texture (texture-of gl-text)
 			    :target-range `(:all (0 ,(1- (array-dimension texture 1))) :all)))
