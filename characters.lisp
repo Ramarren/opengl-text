@@ -94,7 +94,7 @@
 		     (not (eq (texture-of gl-text) new-texture)))
 	    (iter (for cell from 0 below (hash-table-count charh))
 		  (copy-character (texture-of gl-text) cell new-texture cell em)))
-	  (copy-character (draw-char char gl-text) 0 new-texture new-count em)
+	  (copy-character (draw-char char gl-text) 0 new-texture (1- new-count) em)
 	  (setf (character-hash-of gl-text)
 		(old-chars-reinsert-add-new char charh
 					    (character-cells-of gl-text)
