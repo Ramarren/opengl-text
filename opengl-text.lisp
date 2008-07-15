@@ -15,6 +15,9 @@
 (defclass opengl-text ()
   ((font-loader :initarg :font :accessor font-loader-of)
    (emsquare :initarg :emsquare :initform 32 :accessor emsquare-of)
+   (length :initarg :length :initform 20 :accessor length-of)
+   (vertices :accessor vertices-of :initform nil)
+   (tex-coords :accessor tex-coords-of :initform nil)
    (scaler :accessor scaler-of :initform nil)
    (scale-to-unit :accessor scale-to-unit-of :initform nil)
    (texture :initform nil :accessor texture-of)
@@ -29,7 +32,16 @@
 	  (ceiling-power-of-two (emsquare-of instance))))
   ;; force :after method on setf to run, so that scaler field is initialized
   (when (font-loader-of instance)
-   (setf (font-loader-of instance) (font-loader-of instance))))
+   (setf (font-loader-of instance) (font-loader-of instance)))
+  (when (length-of instance)
+    (setf (length-of instance) (length-of instance))))
+
+(defmethod (setf length-of) :after (new-value (object opengl-text))
+  (when (plusp new-value)
+     (setf (vertices-of object)
+	   (make-ffa (list (* 4 new-value) 3) :float))
+     (setf (tex-coords-of object)
+	   (make-ffa (list (* 4 new-value) 2) :float))))
 
 (defmethod (setf emsquare-of) :after (new-value (object opengl-text))
   (when *coerce-em-to-power-of-two*

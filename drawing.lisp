@@ -46,15 +46,15 @@
 		     (aref tex-coords ii 1) (aref tex-coord k 1))))
 	(sum (/ (+ (zpb-ttf:advance-width g)) scaler) into k)))
 
-(defgeneric draw-gl-string (string gl-text &key kerning depth-shift vertices tex-coords color)
-  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0) (vertices nil) (tex-coords nil) (color '(1 1 1 1)))
+(defgeneric draw-gl-string (string gl-text &key kerning depth-shift color)
+  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0) (color '(1 1 1 1)))
     (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string)))
-     (let ((vertices (if vertices
-			 vertices
+     (let ((vertices (if (vertices-of gl-text)
+			 (vertices-of gl-text)
 			 (make-ffa (list (* 4 l) 3) :float)))
-	   (tex-coords (if tex-coords
-			   tex-coords
+	   (tex-coords (if (tex-coords-of gl-text)
+			   (tex-coords-of gl-text)
 			   (make-ffa (list (* 4 l) 2) :float))))
        (generate-vertices vertices tex-coords string gl-text kerning depth-shift)
        (with-pointers-to-arrays ((vertices v-pointer :float (length (find-original-array vertices)) :copy-in)

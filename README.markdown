@@ -19,8 +19,9 @@ Font and other information is stored in an instance of `opengl-text` class. Impo
 
 - `:font` a zpb-ttf font loader
 - `:emsquare` somewhat misnamed, more or less the side of a square containing a single glyph.
+- `:length` length of string there are preallocated vertex buffers for. Default is 20.
 
-Their respective accessors are `font-loader-of`, `emsquare-of` and, which are all setfable.
+Their respective accessors are `font-loader-of`, `emsquare-of` and `length-of`, which are all setfable.
 
 Only the characters actually used are drawn on the texture. It might be useful to use `ensure-characters (sequence opengl-text-object)` function to avoid pauses when characters are first used.
 
