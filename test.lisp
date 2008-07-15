@@ -53,7 +53,7 @@
     (gl:vertex 1 1 0)
     (gl:vertex 0 1 0))
   (gl:color 1 1 0)
-  (draw-gl-string str *the-gl-font*)
+  (draw-gl-string str *the-gl-font* :color '(1 0 0 1))
   (gl:flush)
   (gl:translate 0 -1 0)
   (draw-gl-string str *the-gl-font* :kerning nil)

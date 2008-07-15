@@ -17,7 +17,6 @@
    (emsquare :initarg :emsquare :initform 32 :accessor emsquare-of)
    (scaler :accessor scaler-of :initform nil)
    (scale-to-unit :accessor scale-to-unit-of :initform nil)
-   (color :accessor color-of :initarg :color :initform (list 255 255 255))
    (texture :initform nil :accessor texture-of)
    (texture-number :initform nil :accessor texture-number-of)
    (character-hash :initform (make-hash-table) :accessor character-hash-of)
@@ -37,10 +36,6 @@
     (setf (slot-value object 'emsquare)
 	  (ceiling-power-of-two (emsquare-of object))))
   (flush-texture object :new-texture-array t))
-
-(defmethod (setf color-of) :after (new-value (object opengl-text))
-  (declare (ignore new-value))
-  (flush-texture object))
 
 (defmethod (setf font-loader-of) :after (new-value (object opengl-text))
   (let ((bb (zpb-ttf:bounding-box new-value)))

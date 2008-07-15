@@ -46,8 +46,8 @@
 		     (aref tex-coords ii 1) (aref tex-coord k 1))))
 	(sum (/ (+ (zpb-ttf:advance-width g)) scaler) into k)))
 
-(defgeneric draw-gl-string (string gl-text &key kerning depth-shift vertices tex-coords)
-  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0) (vertices nil) (tex-coords nil))
+(defgeneric draw-gl-string (string gl-text &key kerning depth-shift vertices tex-coords color)
+  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0) (vertices nil) (tex-coords nil) (color '(1 1 1 1)))
     (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string)))
      (let ((vertices (if vertices
@@ -62,7 +62,8 @@
 	 (%gl:vertex-pointer 3 :float 0 v-pointer)
 	 (%gl:tex-coord-pointer 2 :float 0 t-pointer)
 	 (gl:bind-texture :texture-2d (texture-number-of gl-text))
-	 (gl:tex-env :texture-env :texture-env-mode :replace)
+	 (gl:tex-env :texture-env :texture-env-mode :blend)
+	 (gl:tex-env :texture-env :texture-env-color color)
 	 (gl:tex-parameter :texture-2d :texture-min-filter :linear)
 	 (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
 	 (gl:with-pushed-matrix

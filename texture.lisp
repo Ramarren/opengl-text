@@ -30,17 +30,13 @@
 		  (setf (aref target-array tx ty 0)
 			(aref source-array sx sy 0)
 			(aref target-array tx ty 1)
-			(aref source-array sx sy 1)
-			(aref target-array tx ty 2)
-			(aref source-array sx sy 2)
-			(aref target-array tx ty 3)
-			(aref source-array sx sy 3)))))))
+			(aref source-array sx sy 1)))))))
 
 (defun make-new-texture-array (em len)
   (let ((h (maybe-ceiling-power-of-two (* em (ceiling (sqrt len))))))
     (make-ffa (list h
 		    (maybe-ceiling-power-of-two (* em (ceiling (/ len (/ h em)))))
-		    4)
+		    2)
 	      :uint8)))
 
 (defgeneric flush-texture (gl-text &key new-texture-array)
@@ -73,4 +69,4 @@
 	    (trivial-garbage:finalize gl-text #'(lambda ()
 						  (gl:delete-textures (list new-number))))))
       (cl-opengl:tex-image-2d :texture-2d 0 :rgba (array-dimension new-texture 1)
-			      (array-dimension new-texture 0) 0 :rgba :unsigned-byte tex-pointer))))
+			      (array-dimension new-texture 0) 0 :luminance-alpha :unsigned-byte tex-pointer))))
