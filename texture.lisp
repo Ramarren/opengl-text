@@ -17,9 +17,6 @@
 	      :all)))))
 
 (defun copy-character (source-array source-cell target-array target-cell em)
-  #+(or) (map-subarray source-array target-array
-		:source-range (cell-range source-cell em source-array)
-		:target-range (cell-range target-cell em target-array))
   (destructuring-bind ((sxmin sxmax) (symin symax) s-alpha) (cell-range source-cell em source-array)
     (assert (eql s-alpha :all))
     (destructuring-bind ((txmin txmax) (tymin tymax) t-lum-alpha) (cell-range target-cell em target-array)

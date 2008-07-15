@@ -18,15 +18,6 @@
 	(when (and gp kerning)
 	  (incf k (/ (zpb-ttf:kerning-offset gp g font) scaler)))
 	(for (xmin ymin xmax ymax) next (compute-actual-slice c gl-text))
-	#+(or)(let ((vertex (make-array '(4 3)
-					:initial-contents
-					(list (list (+ k xmin) ymin (* j depth-shift))
-					      (list (- (1+ k) (- 1 xmax)) ymin (* j depth-shift))
-					      (list (- (1+ k) (- 1 xmax)) ymax (* j depth-shift))
-					      (list (+ k xmin) ymax (* j depth-shift)))))
-		    (tex-coord (get-char-texture-coords c gl-text)))
-		(map-subarray vertex vertices :target-range `((,i ,(+ i 3)) :all))
-		(map-subarray tex-coord tex-coords :target-range `((,i ,(+ i 3)) :all)))
 	(setf (aref vertices i 0) (+ k xmin)
 	      (aref vertices i 1) ymin
 	      (aref vertices i 2) (* j depth-shift)

@@ -10,7 +10,6 @@ This is a Common Lisp library for texture mapped fonts in OpenGL.
 - cl-vectors
 - zpb-ttf
 - ffa
-- affi
 - trivial-garbage
 
 # Usage
