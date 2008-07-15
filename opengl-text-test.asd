@@ -4,6 +4,6 @@
   :maintainer " <ramarren@cignet.higersbergernet>"
   :author " <ramarren@cignet.higersbergernet>"
   :licence "BSD-style"
-  :depends-on (:opengl-text :sdl-cffi :cl-glu)
+  :depends-on (:opengl-text :cl-glu :cl-glut)
   :components ((:file "test")))
 
