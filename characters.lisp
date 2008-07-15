@@ -21,11 +21,10 @@
   (let ((em (emsquare-of gl-text)))
    (let ((char-path (create-char-path char (font-loader-of gl-text) em))
 	 (aa-state (aa:make-state))
-	 (out-array (make-array (list em em 2) :initial-element 0)))
+	 (out-array (make-array (list em em) :initial-element 0)))
      (flet ((draw-function (x y alpha)
-	      (if (array-in-bounds-p out-array (- em y) x 0)
-		  (setf (aref out-array (- em y) x 0) 255
-			(aref out-array (- em y) x 1) (clamp alpha 0 255))
+	      (if (array-in-bounds-p out-array (- em y) x)
+		  (setf (aref out-array (- em y) x) (clamp alpha 0 255))
 		  (warn "Out of bounds: ~a ~a" (- em y) x))))
        (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)
        out-array))))
@@ -52,8 +51,8 @@
   "Transform cell to relative coordinates (OpenGL TexCoords)."
   (destructuring-bind ((ymin ymax) (xmin xmax) rgba) (cell-range cell em array)
     (assert (eql rgba :all));sanity check
-    (destructuring-bind (h w rgba) (array-dimensions array)
-      (assert (= rgba 2));sanity check
+    (destructuring-bind (h w lum-alpha) (array-dimensions array)
+      (assert (= lum-alpha 2));sanity check
       (let ((xmax (1+ xmax))
 	    (ymax (1+ ymax)))
        (make-array '(4 2)

@@ -6,7 +6,8 @@
 
 (defun cell-range (cell em array)
   "Return affi range for cell in array with emsquare em."
-  (destructuring-bind (aw ah) (butlast (array-dimensions array))
+  (destructuring-bind (aw ah &optional third) (array-dimensions array)
+    (declare (ignore third))
     (let ((x (mod cell (/ aw em))))
       (let ((y (floor (/ cell (/ aw em)))))
 	(assert (< x (/ aw em)))
@@ -19,18 +20,17 @@
   #+(or) (map-subarray source-array target-array
 		:source-range (cell-range source-cell em source-array)
 		:target-range (cell-range target-cell em target-array))
-  (destructuring-bind ((sxmin sxmax) (symin symax) srgba) (cell-range source-cell em source-array)
-    (assert (eql srgba :all))
-    (destructuring-bind ((txmin txmax) (tymin tymax) trgba) (cell-range target-cell em target-array)
-      (assert (eql trgba :all))
+  (destructuring-bind ((sxmin sxmax) (symin symax) s-alpha) (cell-range source-cell em source-array)
+    (assert (eql s-alpha :all))
+    (destructuring-bind ((txmin txmax) (tymin tymax) t-lum-alpha) (cell-range target-cell em target-array)
+      (assert (eql t-lum-alpha :all))
       (iter (for sx from sxmin to sxmax)
 	    (for tx from txmin to txmax)
 	    (iter (for sy from symin to symax)
 		  (for ty from tymin to tymax)
-		  (setf (aref target-array tx ty 0)
-			(aref source-array sx sy 0)
+		  (setf (aref target-array tx ty 0) 255
 			(aref target-array tx ty 1)
-			(aref source-array sx sy 1)))))))
+			(aref source-array sx sy)))))))
 
 (defun make-new-texture-array (em len)
   (let ((h (maybe-ceiling-power-of-two (* em (ceiling (sqrt len))))))
