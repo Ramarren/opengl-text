@@ -24,4 +24,4 @@ Their respective accessors are `font-loader-of`, `emsquare-of` and `length-of`, 
 
 Only the characters actually used are drawn on the texture. It might be useful to use `ensure-characters (sequence opengl-text-object)` function to avoid pauses when characters are first used.
 
-The function `draw-gl-string (string opengl-text-object &key kerning color)` renders a series of rectangles textured with proper letters. Color key argument is a list of four floats between 0 and 1, denoting RGBA color (white-fully opaque by default). No newlines are allowed. The size is normalized so that a font em square (~font size) is one unit in OpenGL coordinate system.
+The function `draw-gl-string (string opengl-text-object &key kerning)` renders a series of rectangles textured with proper letters in the current RGBA color. No newlines are allowed. The size is normalized so that a font em square (~font size) is one unit in OpenGL coordinate system.

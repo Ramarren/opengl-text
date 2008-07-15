@@ -49,10 +49,8 @@
 
 (defun transform-cell (cell array em)
   "Transform cell to relative coordinates (OpenGL TexCoords)."
-  (destructuring-bind ((ymin ymax) (xmin xmax) rgba) (cell-range cell em array)
-    (assert (eql rgba :all));sanity check
-    (destructuring-bind (h w lum-alpha) (array-dimensions array)
-      (assert (= lum-alpha 2));sanity check
+  (destructuring-bind ((ymin ymax) (xmin xmax)) (cell-range cell em array)
+    (destructuring-bind (h w) (array-dimensions array)
       (let ((xmax (1+ xmax))
 	    (ymax (1+ ymax)))
        (make-array '(4 2)
