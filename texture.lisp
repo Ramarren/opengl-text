@@ -43,8 +43,8 @@
 	(let ((new-texture (make-new-texture-array em len)))
 	  (setf (texture-of gl-text) new-texture)
 	  (when (and preserve old-tex)
-	    (iter (for cell from 0 below (hash-table-count (character-hash-of gl-text)))
-		  (copy-character old-tex cell new-texture cell em))
+	    (iter (for (nil glyph) in-hashtable (character-hash-of gl-text))
+		  (copy-character old-tex (cell-of glyph) new-texture (cell-of glyph) em))
 	    (setf (character-hash-of gl-text)
 		  (chars-recoordinate (character-hash-of gl-text) new-texture em))))))))
 
