@@ -91,7 +91,7 @@
 
 (defmethod glut:display ((window opengl-text-window))
   (with-simple-restart (skip-draw "Skip this drawing")
-    (test-simple-draw-string "This is a test. Wo P. T. YcVo" 1/15)))
+    (test-simple-draw-string "This is a test. Wo P. T. YcVoi" 1/15)))
 
 (defmethod glut:keyboard ((window opengl-text-window) key x y)
   (declare (ignore x y))
