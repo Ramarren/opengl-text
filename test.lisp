@@ -5,6 +5,7 @@
 (defparameter *font-name*
   "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSerif.ttf")
 (defvar *the-gl-font*)
+(defparameter *test-string* "This is a test. Wo P. T. YcVoi")
 
 (defclass opengl-text-window (glut:window)
   ()
@@ -77,6 +78,8 @@
   (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)
   (gl:tex-env :texture-env :texture-env-mode :blend)
   (gl:tex-env :texture-env :texture-env-color '(1 1 1 1))
+  (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
+  (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)
   (gl:with-primitive :quads
     (gl:color 0 1 0)
     (gl:tex-coord 0 0)
@@ -91,17 +94,25 @@
 
 (defmethod glut:display ((window opengl-text-window))
   (with-simple-restart (skip-draw "Skip this drawing")
-    (test-simple-draw-string "This is a test. Wo P. T. YcVoi" 1/15)))
+    (test-simple-draw-string *test-string* 1/15)))
 
 (defmethod glut:keyboard ((window opengl-text-window) key x y)
   (declare (ignore x y))
-  (when (eql key #\r)
-    (glut:post-redisplay))
-  (when (eql key #\f)
-    (setup-font)
-    (glut:post-redisplay))
-  (when (eql key #\Esc)
-    (glut:destroy-current-window)))
+  (cond
+    ((eql key #\r))
+    ((eql key #\f)
+     (setup-font))
+    ((eql key #\?)
+     (setf *test-string* (format nil "~A~A" *test-string*
+				 (code-char (+ 33 (random 94))))))
+    ((eql key #\-)
+     (setf *test-string* (subseq *test-string* 0 (1- (length *test-string*)))))
+    ((eql key #\Esc)
+     (glut:destroy-current-window)
+     (return-from glut:keyboard))
+    (t
+     (setf *test-string* (format nil "~A~A" *test-string* key))))
+  (glut:post-redisplay))
 
 (defmethod text-test ()
   (glut:display-window (make-instance 'opengl-text-window)))
