@@ -22,8 +22,7 @@
    (scale-to-unit :accessor scale-to-unit-of :initform nil)
    (texture :initform nil :accessor texture-of)
    (texture-number :initform nil :accessor texture-number-of)
-   (character-hash :initform (make-hash-table) :accessor character-hash-of)
-   (character-cells :initform (make-hash-table) :accessor character-cells-of)))
+   (character-hash :initform (make-hash-table) :accessor character-hash-of)))
 
 (defmethod initialize-instance :after ((instance opengl-text) &rest initargs)
   (declare (ignore initargs))

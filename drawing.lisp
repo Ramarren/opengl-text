@@ -1,11 +1,9 @@
 (in-package :opengl-text)
 
-(defgeneric get-char-texture-coords (char gl-text)
+(defgeneric get-glyph (char gl-text)
   (:method ((char character) (gl-text opengl-text))
-    (let ((char-coords (gethash char (character-hash-of gl-text))))
-      (if char-coords
-	  char-coords
-	  (add-char char gl-text)))))
+    (or (gethash char (character-hash-of gl-text))
+		      (add-char char gl-text))))
 
 (defun generate-vertices (vertices tex-coords string gl-text kerning depth-shift)
   (iter (with font = (font-loader-of gl-text))
@@ -30,7 +28,7 @@
 	      (aref vertices (+ i 3) 0) (+ k xmin)
 	      (aref vertices (+ i 3) 1) ymax
 	      (aref vertices (+ i 3) 2) (* j depth-shift))
-	(let ((tex-coord (get-char-texture-coords c gl-text)))
+	(let ((tex-coord (tex-coord-of (get-glyph c gl-text))))
 	 (iter (for ii from i to (+ i 3))
 	       (for k from 0)
 	       (setf (aref tex-coords ii 0) (aref tex-coord k 0)

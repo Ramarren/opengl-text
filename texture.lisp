@@ -33,12 +33,10 @@
 (defgeneric flush-texture (gl-text &key new-texture-array)
   (:method ((gl-text opengl-text) &key (new-texture-array nil))
     ;; not the most efficient method
-    (let ((chars (sort (hash-table-keys (character-hash-of gl-text))
-		       #'< :key (rcurry #'gethash (character-cells-of gl-text))))
+    (let ((chars (hash-table-keys (character-hash-of gl-text)))
 	  (em (emsquare-of gl-text)))
       (when chars
 	(setf (character-hash-of gl-text) (make-hash-table))
-	(setf (character-cells-of gl-text) (make-hash-table))
 	(if new-texture-array
 	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
 	    (let ((vec (find-original-array (texture-of gl-text))))

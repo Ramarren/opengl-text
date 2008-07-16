@@ -1,5 +1,10 @@
 (in-package :opengl-text)
 
+;; each character in character-hash refers to a glyph object
+(defclass glyph ()
+  ((tex-coord :initarg :tex-coord :accessor tex-coord-of)
+   (cell :initarg :cell :accessor cell-of)))
+
 (defun create-char-path (char font em)
   (let ((bb-glyph (zpb-ttf:bounding-box (zpb-ttf:find-glyph char font)))
 	(em (1- em)))
@@ -62,19 +67,19 @@
 				 (list (/ xmax w) (/ ymax h))
 				 (list (/ xmin w) (/ ymax h)))))))))
 
-(defun chars-recoordinate (old-chars character-cells array em)
+(defun chars-recoordinate (old-chars array em)
   (let ((new-character-hash (make-hash-table)))
-    (iter (for old-char in old-chars)
-	  (for old-cell = (gethash old-char character-cells))
-	  (setf (gethash old-char new-character-hash)
-		(transform-cell old-cell array em)))
+    (iter (for (old-char . glyph) in old-chars)
+	  (for old-cell = (gethash old-char old-chars))
+	  (setf (tex-coord-of glyph) (transform-cell (tex-coord-of glyph) array em)
+		(gethash old-char new-character-hash) glyph))
     new-character-hash))
 
-(defun add-new-character (new-char character-hash character-cells cell array em)
-  (setf (gethash new-char character-cells)
-	cell)
+(defun add-new-character (new-char character-hash cell array em)
   (setf (gethash new-char character-hash)
-	(transform-cell cell array em)))
+	(make-instance 'glyph
+		       :tex-coord (transform-cell cell array em)
+		       :cell cell)))
 
 (defgeneric add-char (char gl-text &optional send-texture)
   (:method ((char character) (gl-text opengl-text) &optional (send-texture t))
@@ -89,11 +94,9 @@
 	    (iter (for cell from 0 below (hash-table-count (character-hash-of gl-text)))
 		  (copy-character (texture-of gl-text) cell new-texture cell em))
 	    (setf (character-hash-of gl-text)
-	     (chars-recoordinate (hash-table-keys (character-hash-of gl-text))
-				 (character-cells-of gl-text) new-texture em)))
+	     (chars-recoordinate (character-hash-of gl-text) new-texture em)))
 	  (copy-character (draw-char char gl-text) 0 new-texture (1- new-count) em)
 	  (add-new-character char (character-hash-of gl-text)
-			     (character-cells-of gl-text)
 			     (1- new-count) new-texture em)
 	  (setf (texture-of gl-text) new-texture)
 	  (when send-texture
