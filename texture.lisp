@@ -30,15 +30,32 @@
 		    (maybe-ceiling-power-of-two (* em (ceiling (/ len (/ h em))))))
 	      :uint8)))
 
+(defgeneric size-texture (gl-text len &key preserve)
+  (:documentation
+   "Create or resize texture-of GL-TEXT large enough to hold LEN
+    chars, possibly preserving its prior values.  Don't do anything
+    if PRESERVE is true and the existing texture is large enough.")
+  (:method ((gl-text opengl-text) (len integer) &key (preserve t))
+    (let ((em (emsquare-of gl-text))
+	  (old-tex (texture-of gl-text)))
+      (unless (and preserve old-tex
+		   (<= len (character-cells em old-tex)))
+	(let ((new-texture (make-new-texture-array em len)))
+	  (setf (texture-of gl-text) new-texture)
+	  (when (and preserve old-tex)
+	    (iter (for cell from 0 below (hash-table-count (character-hash-of gl-text)))
+		  (copy-character old-tex cell new-texture cell em))
+	    (setf (character-hash-of gl-text)
+		  (chars-recoordinate (character-hash-of gl-text) new-texture em))))))))
+
 (defgeneric flush-texture (gl-text &key new-texture-array)
   (:method ((gl-text opengl-text) &key (new-texture-array nil))
     ;; not the most efficient method
-    (let ((chars (hash-table-keys (character-hash-of gl-text)))
-	  (em (emsquare-of gl-text)))
+    (let ((chars (hash-table-keys (character-hash-of gl-text))))
       (when chars
 	(setf (character-hash-of gl-text) (make-hash-table))
 	(if new-texture-array
-	    (setf (texture-of gl-text) (make-new-texture-array em (length chars)))
+	    (size-texture gl-text (length chars) :preserve nil)
 	    (let ((vec (find-original-array (texture-of gl-text))))
 	     (iter (for i index-of-vector vec)
 		   (setf (aref vec i) 0))))
