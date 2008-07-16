@@ -106,7 +106,8 @@
      (setf *test-string* (format nil "~A~A" *test-string*
 				 (code-char (+ 33 (random 94))))))
     ((eql key #\-)
-     (setf *test-string* (subseq *test-string* 0 (1- (length *test-string*)))))
+     (setf *test-string* (subseq *test-string* 0
+				 (max 0 (1- (length *test-string*))))))
     ((eql key #\Esc)
      (glut:destroy-current-window)
      (return-from glut:keyboard))

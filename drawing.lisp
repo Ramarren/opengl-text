@@ -40,6 +40,7 @@
     (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string))
 	  (lg (length-of gl-text)))
+     (when (zerop l) (return-from draw-gl-string))
      (let ((vertices (if (and (>= lg l)
 			      (vertices-of gl-text))
 			 (vertices-of gl-text)
