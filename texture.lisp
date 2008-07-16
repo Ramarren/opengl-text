@@ -45,8 +45,7 @@
 	  (when (and preserve old-tex)
 	    (iter (for (nil glyph) in-hashtable (character-hash-of gl-text))
 		  (copy-character old-tex (cell-of glyph) new-texture (cell-of glyph) em))
-	    (setf (character-hash-of gl-text)
-		  (chars-recoordinate (character-hash-of gl-text) new-texture em))))))))
+	    (chars-recoordinate (character-hash-of gl-text) new-texture em)))))))
 
 (defgeneric flush-texture (gl-text &key new-texture-array)
   (:method ((gl-text opengl-text) &key (new-texture-array nil))

@@ -68,11 +68,8 @@
 				 (list (/ xmin w) (/ ymax h)))))))))
 
 (defun chars-recoordinate (old-chars array em)
-  (let ((new-character-hash (make-hash-table)))
-    (iter (for (old-char glyph) in-hashtable old-chars)
-	  (setf (tex-coord-of glyph) (transform-cell (cell-of glyph) array em)
-		(gethash old-char new-character-hash) glyph))
-    new-character-hash))
+  (iter (for (old-char glyph) in-hashtable old-chars)
+	(setf (tex-coord-of glyph) (transform-cell (cell-of glyph) array em))))
 
 (defun add-new-character (new-char character-hash cell array em)
   (setf (gethash new-char character-hash)
