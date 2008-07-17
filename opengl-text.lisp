@@ -2,6 +2,7 @@
 
 (defvar *opengl-active* t)
 (defvar *coerce-em-to-power-of-two* t)
+(defvar *auto-extend-buffers* t)
 
 (defun ceiling-power-of-two (number)
   (expt 2 (ceiling (log number 2))))

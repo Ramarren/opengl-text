@@ -24,4 +24,6 @@ Their respective accessors are `font-loader-of`, `emsquare-of` and `length-of`, 
 
 Only the characters actually used are drawn on the texture. It might be useful to use `ensure-characters (sequence opengl-text-object)` function to avoid pauses when characters are first used.
 
+Dynamic variable `*auto-extend-buffers*` controls whether vertex/texture coordinates buffers are automatically extended when string is drawn longer that `length`. Setting it to `nil` might be useful if a longer string is only rarely drawn.
+
 The function `draw-gl-string (string opengl-text-object &key kerning)` renders a series of rectangles textured with proper letters in the current RGBA color. No newlines are allowed. The size is normalized so that a font em square (~font size) is one unit in OpenGL coordinate system.
