@@ -15,7 +15,7 @@
 	(for j from 0)
 	(when (and gp kerning)
 	  (incf k (/ (zpb-ttf:kerning-offset gp g font) scaler)))
-	(for (xmin ymin xmax ymax) next (compute-actual-slice c gl-text))
+	(for (xmin ymin xmax ymax) next (get-actual-slice c gl-text))
 	(setf (aref vertices i 0) (+ k xmin)
 	      (aref vertices i 1) ymin
 	      (aref vertices i 2) (* j depth-shift)

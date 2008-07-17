@@ -34,22 +34,28 @@
        (aa:cells-sweep (vectors:update-state aa-state char-path) #'draw-function)
        out-array))))
 
-(defun compute-actual-slice (char gl-text)
-  (let ((font (font-loader-of gl-text)))
-    (let ((glyph (zpb-ttf:find-glyph char font))
-	  (bb (zpb-ttf:bounding-box font)))
-      (let ((base (max (- (zpb-ttf:xmax bb)
-			  (zpb-ttf:xmin bb))
-		       (- (zpb-ttf:ymax bb)
-			  (zpb-ttf:ymin bb))))
-	    (x-edge (zpb-ttf:xmin bb))
-	    (y-edge (zpb-ttf:ymin bb))
-	    (bb-glyph (zpb-ttf:bounding-box glyph)))
-	(mapcar #'float
-		(list (/ (- (zpb-ttf:xmin bb-glyph) x-edge) base)
-		      (/ (- (zpb-ttf:ymin bb-glyph) y-edge) base)
-		      (/ (- (zpb-ttf:xmax bb-glyph) x-edge) base)
-		      (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base)))))))
+(defun compute-actual-slice (char font)
+  (let ((glyph (zpb-ttf:find-glyph char font))
+	(bb (zpb-ttf:bounding-box font)))
+    (let ((base (max (- (zpb-ttf:xmax bb)
+			(zpb-ttf:xmin bb))
+		     (- (zpb-ttf:ymax bb)
+			(zpb-ttf:ymin bb))))
+	  (x-edge (zpb-ttf:xmin bb))
+	  (y-edge (zpb-ttf:ymin bb))
+	  (bb-glyph (zpb-ttf:bounding-box glyph)))
+      (mapcar #'float
+	      (list (/ (- (zpb-ttf:xmin bb-glyph) x-edge) base)
+		    (/ (- (zpb-ttf:ymin bb-glyph) y-edge) base)
+		    (/ (- (zpb-ttf:xmax bb-glyph) x-edge) base)
+		    (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base))))))
+
+(defun get-actual-slice (char gl-text)
+  (let ((slice (gethash char (slices-of gl-text))))
+    (if slice
+	slice
+	(setf (gethash char (slices-of gl-text))
+	      (compute-actual-slice char (font-loader-of gl-text))))))
 
 (defun transform-cell (cell array em)
   "Transform cell to relative coordinates (OpenGL TexCoords)."
