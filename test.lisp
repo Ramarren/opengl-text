@@ -2,10 +2,13 @@
 
 (in-package :opengl-text-test)
 
-(defparameter *font-name*
+(defparameter *font-file*
   "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSerif.ttf")
 (defvar *the-gl-font*)
+(defvar *the-info-gl-font*)
+(defvar *the-font*)
 (defparameter *test-string* "This is a test. Wo P. T. YcVoi")
+(defparameter *kerning* t)
 
 (defclass opengl-text-window (glut:window)
   ()
@@ -16,14 +19,12 @@
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0.5)
   (gl:hint :perspective-correction-hint :nicest)
-  (setup-font))
+  (setf *the-font* (zpb-ttf:open-font-loader *font-file*))
+  (setf *the-gl-font* (setup-font *the-font* 64))
+  (setf *the-info-gl-font* (setup-font *the-font* 32)))
 
-(defun setup-font ()
-  (let ((font (zpb-ttf:open-font-loader *font-name*)))
-    (setf *the-gl-font* (make-instance 'opengl-text :font font :emsquare 128))
-    (trivial-garbage:finalize *the-gl-font*
-			      #'(lambda ()
-				  (zpb-ttf:close-font-loader font)))))
+(defun setup-font (font emsquare)
+  (make-instance 'opengl-text :font font :emsquare emsquare))
 
 (defmethod glut:reshape ((window opengl-text-window) w h)
   (gl:viewport 0 0 w h)
@@ -54,23 +55,23 @@
     (gl:vertex 1 1 0)
     (gl:vertex 0 1 0))
   (gl:color 0.9 0.9 0.9)
-  (draw-gl-string str *the-gl-font*)
+  (draw-gl-string str *the-gl-font* :kerning *kerning*)
   (gl:flush)
   (gl:translate 0 -1 0)
-  (gl:color 0.7 0.7 1.0)
-  (draw-gl-string str *the-gl-font* :kerning nil)
+  (gl:color 0.6 0.7 0.8)
+  (draw-gl-string (format nil "emsquare: ~D  kerning: ~A"
+			  (emsquare-of *the-gl-font*) *kerning*)
+		  *the-info-gl-font*)
   (gl:flush)
   (gl:translate 0 -1 0)
   (gl:with-pushed-matrix
     (gl:translate 1 -0.4 0)
     (gl:rotate 30 0 0 1)
-    ;;(setf (emsquare-of *the-gl-font*) 32)
     (gl:color 1 1 1 0.7)
     (draw-gl-string str *the-gl-font* :kerning nil)
     (gl:translate 3 0 0)
     (gl:color 1 1 1 0.5)
     (draw-gl-string str *the-gl-font*)
-    ;;(setf (emsquare-of *the-gl-font*) 128)
     (gl:flush))
   (gl:translate 4 0 0)
   (gl:scale 2 2 1)
@@ -99,18 +100,34 @@
 (defmethod glut:keyboard ((window opengl-text-window) key x y)
   (declare (ignore x y))
   (cond
-    ((eql key #\r))
-    ((eql key #\f)
-     (setup-font))
-    ((eql key #\?)
+    ((eql key #\Tab)
      (setf *test-string* (format nil "~A~A" *test-string*
 				 (code-char (+ 33 (random 94))))))
-    ((eql key #\-)
+    ((eql key #\Backspace)
      (setf *test-string* (subseq *test-string* 0
 				 (max 0 (1- (length *test-string*))))))
     ((eql key #\Esc)
+     ;; FIXME: hack!  should go back to using finalizer!
+     (zpb-ttf:close-font-loader *the-font*)
      (glut:destroy-current-window)
      (return-from glut:keyboard))
+    ((char< key #\Space)
+     (let ((control-char (code-char (+ 64 (char-code key)))))
+       (cond
+	 ((eql control-char #\R))
+	 ((eql control-char #\F)
+	  (setf *the-gl-font*
+		(setup-font *the-font* (emsquare-of *the-gl-font*))))
+	 ((eql control-char #\M)
+	  (setf (emsquare-of *the-gl-font*)
+		(* 2 (emsquare-of *the-gl-font*))))
+	 ((eql control-char #\N)
+	  (setf (emsquare-of *the-gl-font*)
+		(max 1
+		     (/ (emsquare-of *the-gl-font*) 2))))
+	 ((eql control-char #\K)
+	  (setf *kerning* (not *kerning*)))
+	  )))
     (t
      (setf *test-string* (format nil "~A~A" *test-string* key))))
   (glut:post-redisplay))
