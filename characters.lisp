@@ -49,8 +49,7 @@
 		(list (/ (- (zpb-ttf:xmin bb-glyph) x-edge) base)
 		      (/ (- (zpb-ttf:ymin bb-glyph) y-edge) base)
 		      (/ (- (zpb-ttf:xmax bb-glyph) x-edge) base)
-		      (+ (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base)
-			 (/ 4 (emsquare-of gl-text)))))))))
+		      (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base)))))))
 
 (defun transform-cell (cell array em)
   "Transform cell to relative coordinates (OpenGL TexCoords)."
