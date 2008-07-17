@@ -3,7 +3,8 @@
 ;; each character in character-hash refers to a glyph object
 (defclass glyph ()
   ((tex-coord :initarg :tex-coord :accessor tex-coord-of)
-   (cell :initarg :cell :accessor cell-of)))
+   (cell :initarg :cell :accessor cell-of)
+   (actual-slice :initarg :actual-slice :accessor actual-slice-of)))
 
 (defun create-char-path (char font em)
   (let ((bb-glyph (zpb-ttf:bounding-box (zpb-ttf:find-glyph char font)))
@@ -50,13 +51,6 @@
 		    (/ (- (zpb-ttf:xmax bb-glyph) x-edge) base)
 		    (/ (- (zpb-ttf:ymax bb-glyph) y-edge) base))))))
 
-(defun get-actual-slice (char gl-text)
-  (let ((slice (gethash char (slices-of gl-text))))
-    (if slice
-	slice
-	(setf (gethash char (slices-of gl-text))
-	      (compute-actual-slice char (font-loader-of gl-text))))))
-
 (defun transform-cell (cell array em)
   "Transform cell to relative coordinates (OpenGL TexCoords)."
   (destructuring-bind ((ymin ymax) (xmin xmax)) (cell-range cell em array)
@@ -76,11 +70,13 @@
   (iter (for (old-char glyph) in-hashtable old-chars)
 	(setf (tex-coord-of glyph) (transform-cell (cell-of glyph) array em))))
 
-(defun add-new-character (new-char character-hash cell array em)
-  (setf (gethash new-char character-hash)
+(defun add-new-character (new-char gl-text cell array em)
+  (setf (gethash new-char (character-hash-of gl-text))
 	(make-instance 'glyph
 		       :tex-coord (transform-cell cell array em)
-		       :cell cell)))
+		       :cell cell
+		       :actual-slice (compute-actual-slice
+				      new-char (font-loader-of gl-text)))))
 
 (defgeneric add-char (char gl-text &optional send-texture)
   (:method ((char character) (gl-text opengl-text) &optional (send-texture t))
@@ -89,8 +85,7 @@
 	(size-texture gl-text new-count :preserve t)
 	(let ((new-texture (texture-of gl-text)))
 	  (copy-character (draw-char char gl-text) 0 new-texture (1- new-count) em)
-	  (add-new-character char (character-hash-of gl-text)
-			     (1- new-count) new-texture em)
+	  (add-new-character char gl-text (1- new-count) new-texture em)
 	  (setf (texture-of gl-text) new-texture)
 	  (when send-texture
 	    (send-texture new-texture gl-text))

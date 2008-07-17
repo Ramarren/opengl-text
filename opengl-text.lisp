@@ -19,7 +19,6 @@
    (length :initarg :length :initform 20 :accessor length-of)
    (vertices :accessor vertices-of :initform nil)
    (tex-coords :accessor tex-coords-of :initform nil)
-   (slices :accessor slices-of :initform (make-hash-table))
    (scaler :accessor scaler-of :initform nil)
    (scale-to-unit :accessor scale-to-unit-of :initform nil)
    (texture :initform nil :accessor texture-of)
@@ -57,7 +56,5 @@
 		       (- (zpb-ttf:ymax bb)
 			  (zpb-ttf:ymin bb)))))
       (setf (scaler-of object) scaler)
-      (setf (scale-to-unit-of object) (/ scaler (zpb-ttf:units/em new-value)))
-      (setf (slices-of object) (make-hash-table))))
+      (setf (scale-to-unit-of object) (/ scaler (zpb-ttf:units/em new-value)))))
   (flush-texture object))
-

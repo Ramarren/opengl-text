@@ -8,6 +8,7 @@
 (defun generate-vertices (vertices tex-coords string gl-text kerning depth-shift)
   (iter (with font = (font-loader-of gl-text))
 	(with scaler = (scaler-of gl-text))
+	(with chash = (character-hash-of gl-text))
 	(for c in-string string)
 	(for g next (zpb-ttf:find-glyph c font))
 	(for gp previous g initially nil)
@@ -15,7 +16,7 @@
 	(for j from 0)
 	(when (and gp kerning)
 	  (incf k (/ (zpb-ttf:kerning-offset gp g font) scaler)))
-	(for (xmin ymin xmax ymax) next (get-actual-slice c gl-text))
+	(for (xmin ymin xmax ymax) next (actual-slice-of (gethash c chash)))
 	(setf (aref vertices i 0) (+ k xmin)
 	      (aref vertices i 1) ymin
 	      (aref vertices i 2) (* j depth-shift)
