@@ -13,6 +13,11 @@
       (ceiling-power-of-two number)
       number))
 
+(defun get-font-loader (font-designator)
+  (etypecase font-designator
+    ((or string pathname) (zpb-ttf:open-font-loader font-designator))
+    (zpb-ttf::font-loader font-designator)))
+
 (defclass opengl-text ()
   ((font-loader :initarg :font :accessor font-loader-of)
    (emsquare :initarg :emsquare :initform 32 :accessor emsquare-of)
@@ -32,7 +37,8 @@
 	  (ceiling-power-of-two (emsquare-of instance))))
   ;; force :after method on setf to run, so that scaler field is initialized
   (when (font-loader-of instance)
-   (setf (font-loader-of instance) (font-loader-of instance)))
+   (setf (font-loader-of instance) (get-font-loader
+ (font-loader-of instance))))
   (when (length-of instance)
     (setf (length-of instance) (length-of instance))))
 
@@ -49,7 +55,13 @@
 	  (ceiling-power-of-two (emsquare-of object))))
   (flush-texture object :new-texture-array t))
 
-(defmethod (setf font-loader-of) :after (new-value (object opengl-text))
+(defmethod (setf font-loader-of) :around ((new-value string) (object opengl-text))
+  (setf (font-loader-of object) (get-font-loader new-value)))
+
+(defmethod (setf font-loader-of) :around ((new-value pathname) (object opengl-text))
+  (setf (font-loader-of object) (get-font-loader new-value)))
+
+(defmethod (setf font-loader-of) :after ((new-value zpb-ttf::font-loader) (object opengl-text))
   (let ((bb (zpb-ttf:bounding-box new-value)))
     (let ((scaler (max (- (zpb-ttf:xmax bb)
 			  (zpb-ttf:xmin bb))
