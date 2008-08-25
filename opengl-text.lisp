@@ -34,7 +34,7 @@
   (declare (ignore initargs))
   (when *coerce-em-to-power-of-two*
     (setf (emsquare-of instance)
-	  (ceiling-power-of-two (emsquare-of instance))))
+          (ceiling-power-of-two (emsquare-of instance))))
   ;; force :after method on setf to run, so that scaler field is initialized
   (when (font-loader-of instance)
    (setf (font-loader-of instance) (get-font-loader
@@ -45,14 +45,14 @@
 (defmethod (setf length-of) :after (new-value (object opengl-text))
   (when (plusp new-value)
      (setf (vertices-of object)
-	   (make-ffa (list (* 4 new-value) 3) :float))
+           (make-ffa (list (* 4 new-value) 3) :float))
      (setf (tex-coords-of object)
-	   (make-ffa (list (* 4 new-value) 2) :float))))
+           (make-ffa (list (* 4 new-value) 2) :float))))
 
 (defmethod (setf emsquare-of) :after (new-value (object opengl-text))
   (when *coerce-em-to-power-of-two*
     (setf (slot-value object 'emsquare)
-	  (ceiling-power-of-two (emsquare-of object))))
+          (ceiling-power-of-two (emsquare-of object))))
   (flush-texture object :new-texture-array t))
 
 (defmethod (setf font-loader-of) :around ((new-value string) (object opengl-text))
@@ -64,9 +64,9 @@
 (defmethod (setf font-loader-of) :after ((new-value zpb-ttf::font-loader) (object opengl-text))
   (let ((bb (zpb-ttf:bounding-box new-value)))
     (let ((scaler (max (- (zpb-ttf:xmax bb)
-			  (zpb-ttf:xmin bb))
-		       (- (zpb-ttf:ymax bb)
-			  (zpb-ttf:ymin bb)))))
+                          (zpb-ttf:xmin bb))
+                       (- (zpb-ttf:ymax bb)
+                          (zpb-ttf:ymin bb)))))
       (setf (scaler-of object) scaler)
       (setf (scale-to-unit-of object) (/ scaler (zpb-ttf:units/em new-value)))))
   (flush-texture object))

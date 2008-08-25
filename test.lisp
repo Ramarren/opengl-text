@@ -31,7 +31,7 @@
   (gl:matrix-mode :projection)
   (gl:load-identity)
   (glu:ortho-2d 0 w 0 h)
-  (gl:translate 0 h 0)			;start drawing at the top
+  (gl:translate 0 h 0)                  ;start drawing at the top
   ;; this'll sort-of shrink text as the window shrinks
   (gl:scale (min w h) (min w h) 1))
 
@@ -60,8 +60,8 @@
   (gl:translate 0 -1 0)
   (gl:color 0.6 0.7 0.8)
   (draw-gl-string (format nil "emsquare: ~D  kerning: ~A"
-			  (emsquare-of *the-gl-font*) *kerning*)
-		  *the-info-gl-font*)
+                          (emsquare-of *the-gl-font*) *kerning*)
+                  *the-info-gl-font*)
   (gl:flush)
   (gl:translate 0 -1 0)
   (gl:with-pushed-matrix
@@ -102,10 +102,10 @@
   (cond
     ((eql key #\Tab)
      (setf *test-string* (format nil "~A~A" *test-string*
-				 (code-char (+ 33 (random 94))))))
+                                 (code-char (+ 33 (random 94))))))
     ((eql key #\Backspace)
      (setf *test-string* (subseq *test-string* 0
-				 (max 0 (1- (length *test-string*))))))
+                                 (max 0 (1- (length *test-string*))))))
     ((eql key #\Esc)
      ;; FIXME: hack!  should go back to using finalizer!
      (zpb-ttf:close-font-loader *the-font*)
@@ -114,20 +114,20 @@
     ((char< key #\Space)
      (let ((control-char (code-char (+ 64 (char-code key)))))
        (cond
-	 ((eql control-char #\R))
-	 ((eql control-char #\F)
-	  (setf *the-gl-font*
-		(setup-font *the-font* (emsquare-of *the-gl-font*))))
-	 ((eql control-char #\M)
-	  (setf (emsquare-of *the-gl-font*)
-		(* 2 (emsquare-of *the-gl-font*))))
-	 ((eql control-char #\N)
-	  (setf (emsquare-of *the-gl-font*)
-		(max 1
-		     (/ (emsquare-of *the-gl-font*) 2))))
-	 ((eql control-char #\K)
-	  (setf *kerning* (not *kerning*)))
-	  )))
+         ((eql control-char #\R))
+         ((eql control-char #\F)
+          (setf *the-gl-font*
+                (setup-font *the-font* (emsquare-of *the-gl-font*))))
+         ((eql control-char #\M)
+          (setf (emsquare-of *the-gl-font*)
+                (* 2 (emsquare-of *the-gl-font*))))
+         ((eql control-char #\N)
+          (setf (emsquare-of *the-gl-font*)
+                (max 1
+                     (/ (emsquare-of *the-gl-font*) 2))))
+         ((eql control-char #\K)
+          (setf *kerning* (not *kerning*)))
+          )))
     (t
      (setf *test-string* (format nil "~A~A" *test-string* key))))
   (glut:post-redisplay))
