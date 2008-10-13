@@ -14,7 +14,7 @@
         (for gp previous g initially nil)
         (for i from 0 by 4)
         (for j from 0)
-        (when (and gp kerning)
+        (when (and gp kerning);;note k comes from summing clause below
           (incf k (/ (zpb-ttf:kerning-offset gp g font) scaler)))
         (for (xmin ymin xmax ymax) next (actual-slice-of (gethash c chash)))
         (setf (aref vertices i 0) (+ k xmin)
