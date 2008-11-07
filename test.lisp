@@ -3,7 +3,7 @@
 (in-package :opengl-text-test)
 
 (defparameter *font-file*
-  "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSerif.ttf")
+  "/usr/share/fonts/dejavu/DejaVuSerif.ttf")
 (defvar *the-gl-font*)
 (defvar *the-info-gl-font*)
 (defvar *the-font*)
@@ -19,7 +19,7 @@
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0.5)
   (gl:hint :perspective-correction-hint :nicest)
-  (setf *the-font* (zpb-ttf:open-font-loader *font-file*))
+  (setf *the-font* *font-file*)
   (setf *the-gl-font* (setup-font *the-font* 64))
   (setf *the-info-gl-font* (setup-font *the-font* 32)))
 

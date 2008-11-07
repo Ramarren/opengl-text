@@ -98,6 +98,7 @@
     ffa))
 
 (defun tesselate-character (char font)
+  "Take a character and a font and return a FFA of vertices."
   (let ((glyph (zpb-ttf:find-glyph char font)))
     (let ((paths (paths-ttf:paths-from-glyph glyph
                                              :scale-x (/ (zpb-ttf:units/em font))
