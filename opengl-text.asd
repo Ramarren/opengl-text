@@ -7,5 +7,7 @@
                (:file "opengl-text" :depends-on ("package"))
                (:file "texture" :depends-on ("package" "opengl-text"))
                (:file "characters" :depends-on ("package" "opengl-text" "texture"))
-               (:file "drawing" :depends-on ("package" "texture" "characters" "opengl-text"))))
+               (:file "drawing" :depends-on ("package" "texture" "characters" "opengl-text"))
+               (:file "polygonal" :depends-on ("package" "tesselate"))
+               (:file "tesselate" :depends-on ("package"))))
 
