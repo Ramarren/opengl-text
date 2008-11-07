@@ -7,11 +7,12 @@
    (vertices                  :accessor vertices-of                  :initarg :vertices                  :initform (make-ffa 0 :double))
    (character-hash            :accessor character-hash-of            :initarg :character-hash            :initform (make-hash-table))))
 
-(defun retesselate (gl-text)
-  (let ((chars (hash-table-keys (character-hash-of gl-text))))
-    (setf (character-hash-of gl-text) (make-hash-table))
-    (setf (vertices-of gl-text) (make-ffa 0 :double))
-    (ensure-characters chars gl-text)))
+(defgeneric retesselate (gl-text)
+  (:method ((gl-text polygonal-opengl-text))
+   (let ((chars (hash-table-keys (character-hash-of gl-text))))
+     (setf (character-hash-of gl-text) (make-hash-table))
+     (setf (vertices-of gl-text) (make-ffa 0 :double))
+     (ensure-characters chars gl-text))))
 
 (defmethod shared-initialize :after ((instance polygonal-opengl-text) slot-names &rest initargs)
   (declare (ignore initargs))
@@ -44,7 +45,7 @@
   (:method ((character character) (gl-text polygonal-opengl-text))
     (let ((paths:*bezier-distance-tolerance* (bezier-distance-tolerance-of gl-text))
           (paths:*bezier-angle-tolerance* (bezier-angle-tolerance-of gl-text)))
-     (let ((char-ffa (tesselate-character character (font-loader-of gl-text)))
+     (let ((char-ffa (tesselate-character character gl-text))
            (ver-ffa (vertices-of gl-text)))
        (let ((new-ffa (make-ffa (+ (length char-ffa) (length ver-ffa)) :double)))
          (setf (subseq new-ffa 0 (length ver-ffa)) ver-ffa)
@@ -75,20 +76,21 @@
       (gl:hint :polygon-smooth-hint :nicest)
       (gl:enable :blend)
       (gl:disable :depth-test)
-      (gl:blend-func :src-alpha :one-minus-src-alpha)
+      (gl:blend-func :src-alpha-saturate :one)
       ;; so that string begins at 0,0,0
-      (gl:translate 0
-                    (- (/ (zpb-ttf:descender font) scaler))
-                    0)
-      (labels ((draw-string ()
-                 (gl:with-pushed-matrix
-                   (iter
-                     (for c in-string string)
-                     (for polyglyph = (gethash c chash))
-                     (for g = (glyph-of polyglyph))
-                     (for gp previous g initially nil)
-                     (when (and gp kerning)
-                       (gl:translate (/ (zpb-ttf:kerning-offset gp g font) scaler) 0 0))
-                     (gl:draw-arrays :triangles (start-of polyglyph) (count-of polyglyph))
-                     (gl:translate (/ (+ (zpb-ttf:advance-width g)) scaler) 0 depth-shift)))))
-        (draw-string)))))
+      (gl:with-pushed-matrix
+       (gl:translate 0
+                     (- (/ (zpb-ttf:descender font) scaler))
+                     0)
+       (labels ((draw-string ()
+                  (gl:with-pushed-matrix
+                    (iter
+                      (for c in-string string)
+                      (for polyglyph = (gethash c chash))
+                      (for g = (glyph-of polyglyph))
+                      (for gp previous g initially nil)
+                      (when (and gp kerning)
+                        (gl:translate (/ (zpb-ttf:kerning-offset gp g font) scaler) 0 0))
+                      (gl:draw-arrays :triangles (start-of polyglyph) (count-of polyglyph))
+                      (gl:translate (/ (+ (zpb-ttf:advance-width g)) scaler) 0 depth-shift)))))
+         (draw-string))))))

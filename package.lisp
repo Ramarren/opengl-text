@@ -5,4 +5,5 @@
            #:emsquare-of #:*auto-extend-buffers*
            #:polygonal-opengl-text
            #:bezier-distance-tolerance-of
-           #:bezier-angle-tolerance-of))
+           #:bezier-angle-tolerance-of
+           #:line-width-of))
