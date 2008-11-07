@@ -71,16 +71,14 @@
          (scaler (zpb-ttf:units/em font)))
     (with-pointer-to-array (vertices vertex-pointer :double (length vertices) :copy-in)
       (%gl:vertex-pointer 3 :double 0 vertex-pointer)
-      (gl:enable :polygon-smooth);this doesn't seem to work
+      (gl:enable :polygon-smooth)       ;this doesn't seem to work
       (gl:hint :polygon-smooth-hint :nicest)
       (gl:enable :blend)
       (gl:disable :depth-test)
       (gl:blend-func :src-alpha :one-minus-src-alpha)
       ;; so that string begins at 0,0,0
-      (gl:translate (/ (- (zpb-ttf:xmin (zpb-ttf:bounding-box font))
-                          (zpb-ttf:xmin (zpb-ttf:bounding-box (zpb-ttf:find-glyph (char string 0) font))))
-                       scaler)
-                    (/ (zpb-ttf:descender font) scaler)
+      (gl:translate 0
+                    (- (/ (zpb-ttf:descender font) scaler))
                     0)
       (labels ((draw-string ()
                  (gl:with-pushed-matrix
