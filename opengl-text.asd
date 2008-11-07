@@ -8,6 +8,6 @@
                (:file "texture" :depends-on ("package" "opengl-text"))
                (:file "characters" :depends-on ("package" "opengl-text" "texture"))
                (:file "drawing" :depends-on ("package" "texture" "characters" "opengl-text"))
-               (:file "polygonal" :depends-on ("package" "tesselate" "characters" "drawing"));for generic functions
+               (:file "polygonal" :depends-on ("package" "tesselate" "characters" "drawing" "opengl-text"));for generic functions
                (:file "tesselate" :depends-on ("package"))))
 
