@@ -41,6 +41,9 @@
    (start     :accessor start-of     :initarg :start)
    (count     :accessor count-of     :initarg :count)))
 
+(defgeneric tesselate-character (char gl-text)
+    (:documentation "Take a character and a font and return a FFA of vertices."))
+
 (defgeneric add-polygonal-character (character gl-text)
   (:method ((character character) (gl-text polygonal-opengl-text))
     (let ((paths:*bezier-distance-tolerance* (bezier-distance-tolerance-of gl-text))
