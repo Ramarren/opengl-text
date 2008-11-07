@@ -1,9 +1,17 @@
 (in-package :opengl-text)
 
 (defclass polygonal-opengl-text ()
-  ((font-loader :accessor font-loader-of :initarg :font)
-   (vertices :accessor vertices-of :initarg :vertices :initform (vector))
-   (character-hash :accessor character-hash-of :initarg :character-hash :initform (make-hash-table))))
+  ((font-loader               :accessor font-loader-of               :initarg :font)
+   (bezier-distance-tolerance :accessor bezier-distance-tolerance-of :initarg :bezier-distance-tolerance :initform 0.5)
+   (bezier-angle-tolerance    :accessor bezier-angle-tolerance-of    :initarg :bezier-angle-tolerance :initform 0.05)
+   (vertices                  :accessor vertices-of                  :initarg :vertices                  :initform (vector))
+   (character-hash            :accessor character-hash-of            :initarg :character-hash            :initform (make-hash-table))))
+
+(defun retesselate (gl-text)
+  (let ((chars (hash-table-keys (character-hash-of gl-text))))
+    (setf (character-hash-of gl-text) (make-hash-table))
+    (setf (vertices-of gl-text) (vector))
+    (ensure-characters chars gl-text)))
 
 (defmethod shared-initialize :after ((instance polygonal-opengl-text) slot-names &rest initargs)
   (declare (ignore initargs))
@@ -18,10 +26,13 @@
   (setf (font-loader-of object) (get-font-loader new-value)))
 
 (defmethod (setf font-loader-of) :after ((new-value zpb-ttf::font-loader) (object polygonal-opengl-text))
-  (let ((chars (hash-table-keys (character-hash-of object))))
-    (setf (character-hash-of object) (make-hash-table))
-    (setf (vertices-of object) (vector))
-    (ensure-characters chars object)))
+  (retesselate object))
+
+(defmethod (setf bezier-distance-tolerance-of) :after (new-value (object polygonal-opengl-text))
+  (retesselate object))
+
+(defmethod (setf bezier-angle-tolerance-of) :after (new-value (object polygonal-opengl-text))
+  (retesselate object))
 
 (defclass polygonal-glyph ()
   ((character :accessor character-of :initarg :character)
@@ -31,17 +42,19 @@
 
 (defgeneric add-polygonal-character (character gl-text)
   (:method ((character character) (gl-text polygonal-opengl-text))
-    (let ((char-ffa (tesselate-character character (font-loader-of gl-text)))
-          (ver-ffa (vertices-of gl-text)))
-      (let ((new-ffa (make-ffa (+ (length char-ffa) (length ver-ffa)) :double)))
-        (setf (subseq new-ffa 0 (length ver-ffa)) ver-ffa)
-        (setf (subseq new-ffa (length ver-ffa)) char-ffa)
-        (setf (gethash character (character-hash-of gl-text))
-              (make-instance 'polygonal-glyph
-                             :character character
-                             :glyph (zpb-ttf:find-glyph character (font-loader-of gl-text))
-                             :start (/ (length ver-ffa) 3)
-                             :count (/ (length char-ffa) 3)))))))
+    (let ((paths:*bezier-distance-tolerance* (bezier-distance-tolerance-of gl-text))
+          (paths:*bezier-angle-tolerance* (bezier-angle-tolerance-of gl-text)))
+     (let ((char-ffa (tesselate-character character (font-loader-of gl-text)))
+           (ver-ffa (vertices-of gl-text)))
+       (let ((new-ffa (make-ffa (+ (length char-ffa) (length ver-ffa)) :double)))
+         (setf (subseq new-ffa 0 (length ver-ffa)) ver-ffa)
+         (setf (subseq new-ffa (length ver-ffa)) char-ffa)
+         (setf (gethash character (character-hash-of gl-text))
+               (make-instance 'polygonal-glyph
+                              :character character
+                              :glyph (zpb-ttf:find-glyph character (font-loader-of gl-text))
+                              :start (/ (length ver-ffa) 3)
+                              :count (/ (length char-ffa) 3))))))))
 
 (defmethod ensure-characters ((characters sequence) (gl-text polygonal-opengl-text))
   (let ((more-chars (set-difference (coerce characters 'list) (hash-table-keys (character-hash-of gl-text)))))
