@@ -1,9 +1,27 @@
 (in-package :opengl-text)
 
 (defclass polygonal-opengl-text ()
-  ((font-loader :accessor font-loader-of :initarg :font-loader)
-   (vertices :accessor vertices-of :initarg :vertices)
+  ((font-loader :accessor font-loader-of :initarg :font)
+   (vertices :accessor vertices-of :initarg :vertices :initform (vector))
    (character-hash :accessor character-hash-of :initarg :character-hash :initform (make-hash-table))))
+
+(defmethod shared-initialize :after ((instance polygonal-opengl-text) slot-names &rest initargs)
+  (declare (ignore initargs))
+  (when (or (eql slot-names t)
+            (member 'font-loader slot-names))
+    (setf (font-loader-of instance) (font-loader-of instance))))
+
+(defmethod (setf font-loader-of) :around ((new-value string) (object polygonal-opengl-text))
+  (setf (font-loader-of object) (get-font-loader new-value)))
+
+(defmethod (setf font-loader-of) :around ((new-value pathname) (object polygonal-opengl-text))
+  (setf (font-loader-of object) (get-font-loader new-value)))
+
+(defmethod (setf font-loader-of) :after ((new-value zpb-ttf::font-loader) (object polygonal-opengl-text))
+  (let ((chars (hash-table-keys (character-hash-of object))))
+    (setf (character-hash-of object) (make-hash-table))
+    (setf (vertices-of object) (vector))
+    (ensure-characters chars object)))
 
 (defclass polygonal-glyph ()
   ((character :accessor character-of :initarg :character)
@@ -26,7 +44,7 @@
                              :count (/ (length char-ffa) 3)))))))
 
 (defmethod ensure-characters ((characters sequence) (gl-text polygonal-opengl-text))
-  (let ((more-chars (set-difference characters (hash-table-keys (character-hash-of gl-text)))))
+  (let ((more-chars (set-difference (coerce characters 'list) (hash-table-keys (character-hash-of gl-text)))))
     (when more-chars
       (mapc (rcurry #'add-polygonal-character gl-text) more-chars))))
 
