@@ -81,7 +81,8 @@
                     (setf (aref cell-array x y)
                           (aref array ax ay))))
         (setf (gethash new-cell-number cell-map)
-              (list left top xmax ymax))))))
+              (list left top xmax ymax))
+        new-cell-number))))
 
 ;;; simple-cell-texture is, as the name says, simple, it packs rectangles in rows as high as the
 ;;; biggest rectangle in row, starting new row when it runs out of space
@@ -95,12 +96,15 @@
       (cond
         ;; try to fit in row
         ((>= (- tw left) w)
-         (make-new-cell cell-tex rectangle top left)
-         (setf c-h (max c-h h))
-         (incf left w))
+         (prog1
+             (make-new-cell cell-tex rectangle top left)
+           (setf c-h (max c-h h))
+           (incf left w)))
         ;; move to a new row
         (t
          (incf top c-h)
          (setf left 0)
          (setf c-h h)
-         (make-new-cell cell-tex rectangle top left))))))
+         (prog1
+             (make-new-cell cell-tex rectangle top left)
+           (incf left w)))))))
