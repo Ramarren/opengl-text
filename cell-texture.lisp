@@ -25,29 +25,32 @@
 (defgeneric make-new-cell (cell-tex array top left)
   (:documentation "Add new cell and copy array into top/left position."))
 
-(defgeneric transform-cell-coords (cell-tex cell)
+(defgeneric transform-cell-coords (cell cell-tex)
   (:documentation "Transform cell coordinates to 0..1 space."))
 
 (defmethod transform-cell-coords ((cell integer) (cell-tex cell-texture))
   (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
     (destructuring-bind (w h) (array-dimensions (texture-array-of cell-tex))
-      (make-array '(4 2)
-                  :element-type 'single-float
-                  :initial-contents
-                  (mapcar (curry #'mapcar #'float)
-                          (list (list (/ xmin w) (/ ymin h))
-                                (list (/ xmax w) (/ ymin h))
-                                (list (/ xmax w) (/ ymax h))
-                                (list (/ xmin w) (/ ymax h))))))))
+      (let ((xmax (1+ xmax))
+            (ymax (1+ ymax)));;cell boundaries are inclusive
+       (make-array '(4 2)
+                   :element-type 'single-float
+                   :initial-contents
+                   (mapcar (curry #'mapcar #'float)
+                           (list (list (/ xmin w) (/ ymin h))
+                                 (list (/ xmin w) (/ ymax h))
+                                 (list (/ xmax w) (/ ymax h))
+                                 (list (/ xmax w) (/ ymin h)))))))))
 
 (defmethod get-cell ((cell integer) (cell-tex cell-texture))
   (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
-    (let ((new-array (make-ffa (list (- xmax xmin) (- ymax ymin)) (kind-of cell-tex)))
+    (let ((new-array (make-ffa (list (1+ (- xmax xmin)) (1+ (- ymax ymin))) (kind-of cell-tex)))
           (cell-array (texture-array-of cell-tex)))
       (iter (for x from xmin to xmax)
             (iter (for y from ymin to ymax)
                   (setf (aref new-array (- x xmin) (- y ymin))
-                        (aref cell-array x y)))))))
+                        (aref cell-array x y))))
+      new-array)))
 
 (defmethod enlarge-cell-texture ((cell-tex cell-texture))
   (let ((new-size (ash 32 (1+ (size-of cell-tex)))))
@@ -87,6 +90,11 @@
   ((current-top  :accessor current-top-of  :initarg :current-top :initform 0)
    (current-left :accessor current-left-of :initarg :current-left :initform 0)
    (current-h    :accessor current-h-of    :initarg :current-h :initform 0)))
+
+(defmethod enlarge-cell-texture :before ((cell-tex simple-cell-texture))
+  (setf (current-top-of cell-tex) 0
+        (current-left-of cell-tex) 0
+        (current-h-of cell-tex) 0))
 
 (defmethod guarantee-space ((cell-tex simple-cell-texture) w h)
   (with-accessors ((top current-top-of) (left current-left-of) (c-h current-h-of)

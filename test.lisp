@@ -9,7 +9,7 @@
 (defvar *the-font*)
 (defparameter *test-string* "This is a test. Wo P. T. YcVoi")
 (defparameter *kerning* t)
-(defparameter *mipmap* t)
+(defparameter *kind* :basic)
 
 (defclass opengl-text-window (glut:window)
   ()
@@ -25,9 +25,10 @@
   (setf *the-info-gl-font* (setup-font *the-font* 32)))
 
 (defun setup-font (font emsquare)
-  (make-instance (if *mipmap*
-                     'mipmap-opengl-text
-                     'opengl-text)
+  (make-instance (ecase *kind*
+                   (:mipmap 'mipmap-opengl-text)
+                   (:packed 'packed-mipmap-opengl-text)
+                   (:normal 'opengl-text))
                  :font font :emsquare emsquare))
 
 (defmethod glut:reshape ((window opengl-text-window) w h)
@@ -82,13 +83,15 @@
   (gl:bind-texture :texture-2d (opengl-text::texture-number-of *the-gl-font*))
   (gl:tex-env :texture-env :texture-env-mode :blend)
   (gl:tex-env :texture-env :texture-env-color '(1 1 1 1))
-  (if *mipmap*
-      (progn
-       (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
-       (gl:tex-parameter :texture-2d :texture-mag-filter :linear-mipmap-linear))
-      (progn
-       (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
-       (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)))
+  (ecase *kind*
+    ((:packed :mipmap)
+       (progn
+         (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
+         (gl:tex-parameter :texture-2d :texture-mag-filter :linear-mipmap-linear)))
+    (:normal
+       (progn
+         (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
+         (gl:tex-parameter :texture-2d :texture-mag-filter :nearest))))
   (gl:with-primitive :quads
     (gl:color 0 1 0)
     (gl:tex-coord 0 0)
@@ -140,8 +143,8 @@
      (setf *test-string* (format nil "~A~A" *test-string* key))))
   (glut:post-redisplay))
 
-(defgeneric text-test (mipmap))
+(defgeneric text-test (kind))
 
-(defmethod text-test (mipmap)
-  (let ((*mipmap* mipmap))
+(defmethod text-test (kind)
+  (let ((*kind* kind))
     (glut:display-window (make-instance 'opengl-text-window))))

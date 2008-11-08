@@ -6,7 +6,6 @@
              :initform nil
              :documentation "Textures first primary, the mipmaps from largest to smallest")))
 
-
 (defmethod initialize-instance :after ((instance mipmap-opengl-text) &rest initargs)
   (declare (ignore initargs))
   (setf (emsquare-of instance)
