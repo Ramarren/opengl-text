@@ -25,12 +25,20 @@
 (defgeneric make-new-cell (cell-tex array top left)
   (:documentation "Add new cell and copy array into top/left position."))
 
-;;; first implement simple and fast algorithm, but with very inefficient space usage
+(defgeneric transform-cell-coords (cell-tex cell)
+  (:documentation "Transform cell coordinates to 0..1 space."))
 
-(defclass simple-cell-texture (cell-texture)
-  ((current-top  :accessor current-top-of  :initarg :current-top :initform 0)
-   (current-left :accessor current-left-of :initarg :current-left :initform 0)
-   (current-h    :accessor current-h-of    :initarg :current-h :initform 0)))
+(defmethod transform-cell-coords ((cell integer) (cell-tex cell-texture))
+  (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
+    (destructuring-bind (w h) (array-dimensions (texture-array-of cell-tex))
+      (make-array '(4 2)
+                  :element-type 'single-float
+                  :initial-contents
+                  (mapcar (curry #'mapcar #'float)
+                          (list (list (/ xmin w) (/ ymin h))
+                                (list (/ xmax w) (/ ymin h))
+                                (list (/ xmax w) (/ ymax h))
+                                (list (/ xmin w) (/ ymax h))))))))
 
 (defmethod get-cell ((cell integer) (cell-tex cell-texture))
   (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
@@ -56,18 +64,7 @@
           (setf (cell-map-of cell-tex) (make-hash-table)
                 (texture-array-of cell-tex) new-texture)))))
 
-(defmethod guarantee-space ((cell-tex simple-cell-texture) w h)
-  (with-accessors ((top current-top-of) (left current-left-of) (c-h current-h-of)
-                   (tw texture-width-of) (th texture-height-of)) cell-tex
-    ;;check that there is either space in a row, or to create a new row
-    (let ((space-horizontal (- tw left))
-          (space-vertical (- th top c-h)))
-      (unless (or (>= space-horizontal w)
-                  (>= space-vertical h))
-        (enlarge-cell-texture cell-tex)
-        (guarantee-space cell-tex w h)))))
-
-(defmethod make-new-cell (cell-tex array top left)
+(defmethod make-new-cell ((cell-tex cell-texture) array top left)
   (destructuring-bind (w h) (array-dimensions array)
     (let ((cell-map (cell-map-of cell-tex))
           (cell-array (texture-array-of cell-tex)))
@@ -83,6 +80,24 @@
         (setf (gethash new-cell-number cell-map)
               (list left top xmax ymax))
         new-cell-number))))
+
+;;; first implement simple and fast algorithm, but with very inefficient space usage
+
+(defclass simple-cell-texture (cell-texture)
+  ((current-top  :accessor current-top-of  :initarg :current-top :initform 0)
+   (current-left :accessor current-left-of :initarg :current-left :initform 0)
+   (current-h    :accessor current-h-of    :initarg :current-h :initform 0)))
+
+(defmethod guarantee-space ((cell-tex simple-cell-texture) w h)
+  (with-accessors ((top current-top-of) (left current-left-of) (c-h current-h-of)
+                   (tw texture-width-of) (th texture-height-of)) cell-tex
+    ;;check that there is either space in a row, or to create a new row
+    (let ((space-horizontal (- tw left))
+          (space-vertical (- th top c-h)))
+      (unless (or (>= space-horizontal w)
+                  (>= space-vertical h))
+        (enlarge-cell-texture cell-tex)
+        (guarantee-space cell-tex w h)))))
 
 ;;; simple-cell-texture is, as the name says, simple, it packs rectangles in rows as high as the
 ;;; biggest rectangle in row, starting new row when it runs out of space
