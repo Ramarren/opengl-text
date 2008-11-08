@@ -1,7 +1,10 @@
 (in-package :opengl-text)
 
 (defclass mipmap-opengl-text (base-opengl-text)
-  ((textures :accessor textures-of :initarg :textures :documentation "Textures first primary, the mipmaps from largest to smallest")))
+  ((textures :accessor textures-of
+             :initarg :textures
+             :initform nil
+             :documentation "Textures first primary, the mipmaps from largest to smallest")))
 
 
 (defmethod initialize-instance :after ((instance mipmap-opengl-text) &rest initargs)
