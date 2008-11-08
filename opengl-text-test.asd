@@ -5,5 +5,5 @@
   :author " <ramarren@cignet.higersbergernet>"
   :licence "BSD-style"
   :depends-on (:opengl-text :cl-glu :cl-glut)
-  :components ((:file "test")
-               (:file "test-mipmap" :depends-on ("test"))))
+  :components ((:file "test")))
+

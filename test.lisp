@@ -27,7 +27,8 @@
 (defun setup-font (font emsquare)
   (make-instance (if *mipmap*
                      'mipmap-opengl-text
-                     'opengl-text) :font font :emsquare emsquare))
+                     'opengl-text)
+                 :font font :emsquare emsquare))
 
 (defmethod glut:reshape ((window opengl-text-window) w h)
   (gl:viewport 0 0 w h)
@@ -77,15 +78,14 @@
     (draw-gl-string str *the-gl-font*)
     (gl:flush))
   (gl:translate 4 0 0)
-  (gl:scale 0.5 0.5 1)
+  (gl:scale 2 2 1)
   (gl:bind-texture :texture-2d (opengl-text::texture-number-of *the-gl-font*))
-  (print *the-gl-font*)
   (gl:tex-env :texture-env :texture-env-mode :blend)
   (gl:tex-env :texture-env :texture-env-color '(1 1 1 1))
   (if *mipmap*
       (progn
-       (gl:tex-parameter :texture-2d :texture-min-filter :nearest-mipmap-nearest)
-       (gl:tex-parameter :texture-2d :texture-mag-filter :nearest-mipmap-nearest))
+       (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
+       (gl:tex-parameter :texture-2d :texture-mag-filter :linear-mipmap-linear))
       (progn
        (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
        (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)))
