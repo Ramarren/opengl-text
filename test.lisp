@@ -132,5 +132,7 @@
      (setf *test-string* (format nil "~A~A" *test-string* key))))
   (glut:post-redisplay))
 
-(defmethod text-test ()
+(defgeneric text-test (mipmap))
+
+(defmethod text-test ((mipmap (eql nil)))
   (glut:display-window (make-instance 'opengl-text-window)))
