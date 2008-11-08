@@ -37,10 +37,10 @@
                    :element-type 'single-float
                    :initial-contents
                    (mapcar (curry #'mapcar #'float)
-                           (list (list (/ xmin w) (/ ymin h))
-                                 (list (/ xmin w) (/ ymax h))
-                                 (list (/ xmax w) (/ ymax h))
-                                 (list (/ xmax w) (/ ymin h)))))))))
+                           (list (list (/ ymin h) (/ xmin w))
+                                 (list (/ ymin h) (/ xmax w))
+                                 (list (/ ymax h) (/ xmax w))
+                                 (list (/ ymax h) (/ xmin w)))))))))
 
 (defmethod get-cell ((cell integer) (cell-tex cell-texture))
   (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
@@ -59,7 +59,7 @@
       (setf (texture-width-of cell-tex) new-size)
       (setf (texture-height-of cell-tex) new-size)
       (if (texture-array-of cell-tex)
-          (let ((old-cells (iter (for cell in (hash-table-keys (cell-map-of cell-tex)))
+          (let ((old-cells (iter (for cell from 0 below (hash-table-count (cell-map-of cell-tex)))
                                  (collect (get-cell cell cell-tex)))))
             (setf (cell-map-of cell-tex) (make-hash-table)
                   (texture-array-of cell-tex) new-texture)

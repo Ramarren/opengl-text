@@ -56,6 +56,10 @@
                          :tex-coord (transform-cell-coords new-cell (celled-texture-of gl-text))
                          :cell new-cell
                          :actual-slice (compute-actual-slice char (font-loader-of gl-text))))
+    (iter (for (char glyph) in-hashtable (character-hash-of gl-text))
+          (with cell-tex = (celled-texture-of gl-text))
+          (setf (tex-coord-of glyph)
+                (transform-cell-coords (cell-of glyph) cell-tex)))
     (when send-texture
       (send-texture gl-text))
     (gethash char (character-hash-of gl-text))))
