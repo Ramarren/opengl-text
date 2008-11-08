@@ -1,7 +1,7 @@
 (in-package :opengl-text)
 
 (defgeneric get-glyph (char gl-text)
-  (:method ((char character) (gl-text opengl-text))
+  (:method ((char character) (gl-text base-opengl-text))
     (or (gethash char (character-hash-of gl-text))
                       (add-char char gl-text))))
 
@@ -37,7 +37,7 @@
         (sum (/ (+ (zpb-ttf:advance-width g)) scaler) into k)))
 
 (defgeneric get-buffers (l gl-text)
-  (:method ((l integer) (gl-text opengl-text))
+  (:method ((l integer) (gl-text base-opengl-text))
     (let ((lg (length-of gl-text)))
       (when (and *auto-extend-buffers*
                  (> l (length-of gl-text)))
@@ -52,7 +52,12 @@
                   (make-ffa (list (* 4 l) 2) :float))))))
 
 (defgeneric draw-gl-string (string gl-text &key kerning depth-shift)
-  (:method ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0))
+  (:method :before ((string string) (gl-text opengl-text) &key (kerning t) (depth-shift 0.0))
+    (declare (ignore kerning string depth-shift))
+    (gl:tex-env :texture-env :texture-env-mode :modulate)
+    (gl:tex-parameter :texture-2d :texture-min-filter :linear)
+    (gl:tex-parameter :texture-2d :texture-mag-filter :linear))
+  (:method ((string string) (gl-text base-opengl-text) &key (kerning t) (depth-shift 0.0))
     (ensure-characters (remove-duplicates string) gl-text)
     (let ((l (length string)))
      (when (zerop l) (return-from draw-gl-string))
@@ -63,9 +68,6 @@
          (%gl:vertex-pointer 3 :float 0 v-pointer)
          (%gl:tex-coord-pointer 2 :float 0 t-pointer)
          (gl:bind-texture :texture-2d (texture-number-of gl-text))
-         (gl:tex-env :texture-env :texture-env-mode :modulate)
-         (gl:tex-parameter :texture-2d :texture-min-filter :linear)
-         (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
          (gl:with-pushed-matrix
            (gl:scale (scale-to-unit-of gl-text)
                      (scale-to-unit-of gl-text)

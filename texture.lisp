@@ -47,31 +47,37 @@
                   (copy-character old-tex (cell-of glyph) new-texture (cell-of glyph) em))
             (chars-recoordinate (character-hash-of gl-text) new-texture em)))))))
 
+(defgeneric clear-texture (gl-text)
+  (:method ((gl-text opengl-text))
+    (let ((vec (find-original-array (texture-of gl-text))))
+      (iter (for i index-of-vector vec)
+            (setf (aref vec i) 0)))))
+
 (defgeneric flush-texture (gl-text &key new-texture-array)
-  (:method ((gl-text opengl-text) &key (new-texture-array nil))
+  (:method ((gl-text base-opengl-text) &key (new-texture-array nil))
     ;; not the most efficient method
     (let ((chars (hash-table-keys (character-hash-of gl-text))))
       (when chars
         (setf (character-hash-of gl-text) (make-hash-table))
         (if new-texture-array
             (size-texture gl-text (length chars) :preserve nil)
-            (let ((vec (find-original-array (texture-of gl-text))))
-             (iter (for i index-of-vector vec)
-                   (setf (aref vec i) 0))))
+            (clear-texture gl-text))
         (ensure-characters chars gl-text)))))
 
-(defun send-texture (new-texture gl-text)
-  (when *opengl-active*
-    (with-pointer-to-array (new-texture tex-pointer
-                                        :uint8
-                                        (reduce #'* (array-dimensions new-texture))
-                                        :copy-in)
-      (if (texture-number-of gl-text)
-          (cl-opengl:bind-texture :texture-2d (texture-number-of gl-text))
-          (let ((new-number (car (cl-opengl:gen-textures 1))))
-            (setf (texture-number-of gl-text) new-number)
-            (cl-opengl:bind-texture :texture-2d new-number)
-            (trivial-garbage:finalize gl-text #'(lambda ()
-                                                  (gl:delete-textures (list new-number))))))
-      (cl-opengl:tex-image-2d :texture-2d 0 :intensity (array-dimension new-texture 1)
-                              (array-dimension new-texture 0) 0 :luminance :unsigned-byte tex-pointer))))
+(defgeneric send-texture (gl-text)
+  (:method ((gl-text opengl-text))
+   (when *opengl-active*
+     (let ((new-texture (texture-of gl-text)))
+      (with-pointer-to-array (new-texture tex-pointer
+                                          :uint8
+                                          (reduce #'* (array-dimensions new-texture))
+                                          :copy-in)
+        (if (texture-number-of gl-text)
+            (cl-opengl:bind-texture :texture-2d (texture-number-of gl-text))
+            (let ((new-number (car (cl-opengl:gen-textures 1))))
+              (setf (texture-number-of gl-text) new-number)
+              (cl-opengl:bind-texture :texture-2d new-number)
+              (trivial-garbage:finalize gl-text #'(lambda ()
+                                                    (gl:delete-textures (list new-number))))))
+        (cl-opengl:tex-image-2d :texture-2d 0 :intensity (array-dimension new-texture 1)
+                                (array-dimension new-texture 0) 0 :luminance :unsigned-byte tex-pointer))))))
