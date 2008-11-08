@@ -12,7 +12,7 @@
   (gl:shade-model :smooth)
   (gl:clear-color 0 0 0 0.5)
   (gl:hint :perspective-correction-hint :nicest)
-  (setf *the-font* *font-file*)
+  (setf *the-font* (zpb-ttf:open-font-loader *font-file*))
   (setf *the-gl-font* (setup-font-mipmap *the-font* 64))
   (setf *the-info-gl-font* (setup-font-mipmap *the-font* 32)))
 
