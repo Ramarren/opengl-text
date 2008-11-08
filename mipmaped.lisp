@@ -64,6 +64,19 @@
           (cl-opengl:bind-texture :texture-2d new-number)
           (trivial-garbage:finalize gl-text #'(lambda ()
                                                 (gl:delete-textures (list new-number))))))
+    ;; first generate mipmaps automatically, this is because OpenGL requires mipmaps for all levels,
+    ;; and I don't want to generate mipmaps for those levels where emsquare is smaller than one
+    ;; pixel, since at that point it doesn't really matter what is in the texture, it could be
+    ;; filled with 0 or #xff, but I don't want to worry about exact details
+    (let ((texture (car (textures-of gl-text))))
+      (with-pointer-to-array (texture
+                              tex-pointer
+                              :uint8
+                              (reduce #'* (array-dimensions texture))
+                              :copy-in)
+        (glu:build-2d-mipmaps :texture-2d :intensity (array-dimension texture 1)
+                              (array-dimension texture 0) :luminance :unsigned-byte tex-pointer)))
+    ;; then load textures for those levels that are drawn by cl-vectors
     (iter (for texture in (textures-of gl-text))
           (for level from 0)
           (with-pointer-to-array (texture tex-pointer :uint8 (reduce #'* (array-dimensions texture)) :copy-in)
@@ -89,6 +102,5 @@
 
 (defmethod :before ((string string) (gl-text mipmap-opengl-text) &key (kerning t) (depth-shift 0.0))
   (declare (ignore kerning string depth-shift))
-  (gl:tex-env :texture-env :texture-env-mode :modulate)
-  (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
-  (gl:tex-parameter :texture-2d :texture-mag-filter :linear-mipmap-linear))
+  (gl:tex-parameter :texture-2d :texture-min-filter :nearest-mipmap-nearest)
+  (gl:tex-parameter :texture-2d :texture-mag-filter :nearest-mipmap-nearest))
