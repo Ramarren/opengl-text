@@ -9,6 +9,7 @@
 (defvar *the-font*)
 (defparameter *test-string* "This is a test. Wo P. T. YcVoi")
 (defparameter *kerning* t)
+(defparameter *mipmap* t)
 
 (defclass opengl-text-window (glut:window)
   ()
@@ -24,7 +25,9 @@
   (setf *the-info-gl-font* (setup-font *the-font* 32)))
 
 (defun setup-font (font emsquare)
-  (make-instance 'opengl-text :font font :emsquare emsquare))
+  (make-instance (if *mipmap*
+                     'mipmap-opengl-text
+                     'opengl-text) :font font :emsquare emsquare))
 
 (defmethod glut:reshape ((window opengl-text-window) w h)
   (gl:viewport 0 0 w h)
@@ -74,13 +77,18 @@
     (draw-gl-string str *the-gl-font*)
     (gl:flush))
   (gl:translate 4 0 0)
-  (gl:scale 2 2 1)
+  (gl:scale 0.5 0.5 1)
   (gl:bind-texture :texture-2d (opengl-text::texture-number-of *the-gl-font*))
-  (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)
+  (print *the-gl-font*)
   (gl:tex-env :texture-env :texture-env-mode :blend)
   (gl:tex-env :texture-env :texture-env-color '(1 1 1 1))
-  (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
-  (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)
+  (if *mipmap*
+      (progn
+       (gl:tex-parameter :texture-2d :texture-min-filter :nearest-mipmap-nearest)
+       (gl:tex-parameter :texture-2d :texture-mag-filter :nearest-mipmap-nearest))
+      (progn
+       (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
+       (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)))
   (gl:with-primitive :quads
     (gl:color 0 1 0)
     (gl:tex-coord 0 0)
@@ -134,5 +142,6 @@
 
 (defgeneric text-test (mipmap))
 
-(defmethod text-test ((mipmap (eql nil)))
-  (glut:display-window (make-instance 'opengl-text-window)))
+(defmethod text-test (mipmap)
+  (let ((*mipmap* mipmap))
+    (glut:display-window (make-instance 'opengl-text-window))))
