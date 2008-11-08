@@ -27,3 +27,7 @@ Only the characters actually used are drawn on the texture. It might be useful t
 Dynamic variable `*auto-extend-buffers*` controls whether vertex/texture coordinates buffers are automatically extended when string is drawn longer that `length`. Setting it to `nil` might be useful if a longer string is only rarely drawn.
 
 The function `draw-gl-string (string opengl-text-object &key kerning)` renders a series of rectangles textured with proper letters in the current RGBA color. No newlines are allowed. The size is normalized so that a font em square (~font size) is one unit in OpenGL coordinate system.
+
+# Note
+
+There is an experimental branch using other ways to store the texture, inluding mipmaps, polygon and outline font. The code there is even less tested and in desperate need of refactoring though, which may or may not happen in the future.
