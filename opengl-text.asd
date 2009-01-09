@@ -7,7 +7,9 @@
                (:file "opengl-text" :depends-on ("package"))
                (:module "texture"
                         :depends-on ("package" "opengl-text")
-                        :components ((:file "texture")
+                        :components ((:file "texture-base")
+                                     (:file "texture")
                                      (:file "cell-texture")
                                      (:file "mipmaped")
-                                     (:file "packed-mipmaps")))))
+                                     (:file "packed-mipmaps")
+                                     (:file "drawing" :depends-on ("texture-base" "texture"))))))
