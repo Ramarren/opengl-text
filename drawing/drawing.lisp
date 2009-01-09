@@ -1,4 +1,4 @@
-(in-package :opengl-text)
+(in-package :opengl-text-vector)
 
 (defgeneric get-glyph (char gl-text)
   (:method ((char character) (gl-text base-opengl-text))

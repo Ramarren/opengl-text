@@ -1,4 +1,9 @@
-(in-package :opengl-text)
+(in-package :opengl-text-vector)
+
+(defun get-font-loader (font-designator)
+  (etypecase font-designator
+    ((or string pathname) (zpb-ttf:open-font-loader font-designator))
+    (zpb-ttf::font-loader font-designator)))
 
 ;; each character in character-hash refers to a glyph object
 (defclass glyph ()
