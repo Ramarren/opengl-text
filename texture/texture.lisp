@@ -16,7 +16,7 @@
                                                 (texture-array-of old-cell-tex))
                              :texture-width (texture-width-of old-cell-tex)
                              :texture-height (texture-height-of old-cell-tex)
-                             :kind (kind-of old-cell-tex)))
+                             :type (kind-of old-cell-tex)))
         (ensure-characters chars gl-text))))
 
 (defmethod send-texture ((gl-text textured-opengl-text))
