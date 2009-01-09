@@ -71,9 +71,6 @@
          (%gl:tex-coord-pointer 2 :float 0 t-pointer)
          (gl:bind-texture :texture-2d (texture-number-of gl-text))
          (gl:with-pushed-matrix
-           (gl:scale (/ (emsquare-of gl-text))
-                     (/ (emsquare-of gl-text))
-                     1.0)
            (when-let (slide (funcall (placement-function-of gl-text) (char string 0)))
              (apply #'gl:translate slide))
            (gl:draw-arrays :quads 0 (* 4 (length string)))))))))
