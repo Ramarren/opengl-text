@@ -114,8 +114,6 @@
      (setf *test-string* (subseq *test-string* 0
                                  (max 0 (1- (length *test-string*))))))
     ((eql key #\Esc)
-     ;; FIXME: hack!  should go back to using finalizer!
-     (zpb-ttf:close-font-loader *the-font*)
      (glut:destroy-current-window)
      (return-from glut:keyboard))
     ((char< key #\Space)
