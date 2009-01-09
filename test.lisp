@@ -1,4 +1,4 @@
-(defpackage :opengl-text-test (:use :cl :opengl-text :iterate))
+(defpackage :opengl-text-test (:use :cl :opengl-text :opengl-text-vector :iterate))
 
 (in-package :opengl-text-test)
 
@@ -25,11 +25,7 @@
   (setf *the-info-gl-font* (setup-font *the-font* 32)))
 
 (defun setup-font (font emsquare)
-  (make-instance (ecase *kind*
-                   (:mipmap 'mipmap-opengl-text)
-                   (:packed 'packed-mipmap-opengl-text)
-                   (:normal 'opengl-text))
-                 :font font :emsquare emsquare))
+  (make-vector-gl-text *the-font*))
 
 (defmethod glut:reshape ((window opengl-text-window) w h)
   (gl:viewport 0 0 w h)
@@ -84,11 +80,11 @@
   (gl:tex-env :texture-env :texture-env-mode :blend)
   (gl:tex-env :texture-env :texture-env-color '(1 1 1 1))
   (ecase *kind*
-    ((:packed :mipmap)
+    (:mipmap
        (progn
          (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
          (gl:tex-parameter :texture-2d :texture-mag-filter :linear-mipmap-linear)))
-    (:normal
+    ((nil)
        (progn
          (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
          (gl:tex-parameter :texture-2d :texture-mag-filter :nearest))))
@@ -143,8 +139,8 @@
      (setf *test-string* (format nil "~A~A" *test-string* key))))
   (glut:post-redisplay))
 
-(defgeneric text-test (kind))
+(defgeneric text-test (&optional kind))
 
-(defmethod text-test (kind)
+(defmethod text-test (&optional (kind nil))
   (let ((*kind* kind))
     (glut:display-window (make-instance 'opengl-text-window))))

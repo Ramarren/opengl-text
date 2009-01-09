@@ -28,7 +28,7 @@
               (cl-opengl:bind-texture :texture-2d new-number)
               (trivial-garbage:finalize gl-text #'(lambda ()
                                                     (gl:delete-textures (list new-number))))))
-    (let ((new-texture (texture-of gl-text)))
+    (let ((new-texture (texture-array-of (texture-of gl-text))))
       (with-pointer-to-array (new-texture tex-pointer
                                           :uint8
                                           (length (find-original-array new-texture))

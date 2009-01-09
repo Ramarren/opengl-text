@@ -23,10 +23,11 @@
 
 (defun make-placement-function (font scaler)
   #'(lambda (c)
-      (/ (- (zpb-ttf:xmin (zpb-ttf:bounding-box font))
-            (zpb-ttf:xmin (zpb-ttf:bounding-box (zpb-ttf:find-glyph c font))))
-         scaler)
-      (/ (zpb-ttf:descender font) scaler)))
+      (list (/ (- (zpb-ttf:xmin (zpb-ttf:bounding-box font))
+                  (zpb-ttf:xmin (zpb-ttf:bounding-box (zpb-ttf:find-glyph c font))))
+               scaler)
+            (/ (zpb-ttf:descender font) scaler)
+            0)))
 
 (defun make-vector-gl-text (font &key (mipmapped nil) (internal-size 32) (length 20))
   (let ((font (get-font-loader font)))
