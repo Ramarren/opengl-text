@@ -9,5 +9,5 @@
                         :depends-on ("package" "opengl-text")
                         :components ((:file "texture")
                                      (:file "cell-texture")
-                                     (:file "mipmaped" :depends-on ("package" "characters" "opengl-text" "drawing"))
-                                     (:file "packed-mipmaps" :depends-on ("package" "characters" "opengl-text" "drawing"))))))
+                                     (:file "mipmaped")
+                                     (:file "packed-mipmaps")))))
