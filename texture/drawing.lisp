@@ -74,7 +74,7 @@
            (gl:scale (/ (emsquare-of gl-text))
                      (/ (emsquare-of gl-text))
                      1.0)
-           (when-let (slide (funcall (placement-function-of gl-text)))
+           (when-let (slide (funcall (placement-function-of gl-text) (char string 0)))
              (apply #'gl:translate
                     slide (list 0)))
            (gl:draw-arrays :quads 0 (* 4 (length string)))))))))
