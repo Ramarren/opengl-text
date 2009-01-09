@@ -1,64 +1,44 @@
 # Overview
 
-This is a Common Lisp library for texture mapped fonts in OpenGL.
+This is a Common Lisp library for texture mapped fonts in OpenGL. The actual glyph rendering is a pluggable subsystem, right now there is only one based on cl-vectors ttf rendering. Unfortunately, there is no hinting, so small font sizes don't work very well, and there is no pixel-texel positioning anyway.
+
+There is polygonal font subsystem, but it is completely broken.
 
 # Dependencies
 
 - cl-opengl
 - iterate
 - alexandria
-- cl-vectors
-- zpb-ttf
 - ffa
 - trivial-garbage
 
+and for TTF rendering subsystem:
+
+- cl-vectors
+- zpb-ttf
+
 # Usage
 
-Note: the OpenGL textures are managed using finalizers. It is possible that they might run after OpenGL has stopped and started again, and free a texture in a new session. Deleting a texture when OpenGL is not running doesn't seem to hurt, as far as I can tell.
-
-Another note: none of below methods handle small fonts size very well. Class
-`packed-mipmap-opengl-text` should in theory be best, with emsquare equal to displayed size, but
-unfortunately cl-vectors/zpb-ttf provides no hinting. It should be relatively easy to replace them
-with Freetype by replacing draw-char method, but I would prefer not to introduce non-Lisp
-dependencies (besides OpenGL of course), and there seem to be no established Freetype bindings,
-anyway.
+Note: the OpenGL textures are managed using finalizers. It is possible that they might run after
+OpenGL has stopped and started again, and free a texture in a new session. Deleting a texture when
+OpenGL is not running doesn't seem to hurt, as far as I can tell.
 
 ## Basic Textured Font
 
-Font and other information is stored in an instance of `opengl-text` class. Important initargs are:
+Font object is usually created by glyph rendering subsystem. Right now only one exists:
 
-- `:font` a zpb-ttf font loader
-- `:emsquare` somewhat misnamed, more or less the side of a square containing a single glyph.
-- `:length` length of string there are preallocated vertex buffers for. Default is 20.
+`opengl-text-vector:make-vector-gl-text (font &key (mipmapped t) (internal-size 32) (length 20))`
 
-Their respective accessors are `font-loader-of`, `emsquare-of` and `length-of`, which are all setfable.
+ - `font` is a path to ttf font, or zpb-ttf font loader
+ - `mipmapped` sets whether mipmaps are used
+ - `internal-size` sets how many pixels the side of em-square of the font is in the texture
+ - `length` sets the size of vertex and texture coordinates buffers, special variable `opengl-text:*auto-extend-buffers*` controls whether drawing a longer string will enlarge them, or will allocate one shot larger buffers
 
-Only the characters actually used are drawn on the texture. It might be useful to use `ensure-characters (sequence opengl-text-object)` function to avoid pauses when characters are first used.
+Returned object is a valid argument to:
 
-Dynamic variable `*auto-extend-buffers*` controls whether vertex/texture coordinates buffers are automatically extended when string is drawn longer that `length`. Setting it to `nil` might be useful if a longer string is only rarely drawn.
+`opengl-text:draw-gl-string (string gl-text &key kerning depth-shift)`
 
-The function `draw-gl-string (string opengl-text-object &key kerning)` renders a series of rectangles textured with proper letters in the current RGBA color. No newlines are allowed. The size is normalized so that a font em square (~font size) is one unit in OpenGL coordinate system.
-
-## Mipmapped font
-
-This is essentially identical to the one above, but draws mipmaps for smaller emsquares. This
-requires more memory and time, as each glyph has to be drawn (log emsquare 2) times. 
-
-The class name is `mipmap-opengl-text`.
-
-## Packed texture
-
-This is similar to the basic font, but uses different way of packing glyphs into the texture. The two preceding classes draw glyphs scaled to square cells on the texture. This one maintains aspect ratio. The glyphs are packed into texture using very simple rectangle packing algorithm, but it seems to work reasonably well. Also automatic mipmaps are generated.
-
-The class name is `packed-mipmap-opengl-text`.
-
-## Polygonal
-
-The class `polygonal-opengl-text` uses cl-vectors and GLU tesselator to transform glyphs into
-triangles, and draws them as such. Initargs `:bezier-distance-tolerance` and
-`:bezier-angle-tolerance` are passed to cl-vectors and control in how many segments curves are
-split.
-
-## Outline
-
-The class `outline-opengl-text` is like the above, but draws glyphs as outline lines, rather than triangles. Slot `line-width` controls width of the line in pixels.
+ - `string` is a string to be printed, newlines are ignored and it doesn't cause GL matrix changes
+ - `gl-text` is a aforementioned object
+ - `kerning` controls kerning
+ - `depth-shift` allows each letter to be translated in the z direction
