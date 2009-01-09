@@ -10,6 +10,9 @@
    (texture-height :accessor texture-height-of :initarg :texture-height :initform 0)
    (cell-map       :accessor cell-map-of       :initarg :cell-map       :initform (make-hash-table))))
 
+(defgeneric clear-texture (cell-tex)
+  (:documentation "Remove all cells and zero the array, but leave size."))
+
 (defgeneric get-cell (cell cell-tex)
   (:documentation "Extract cell into new array"))
 
@@ -27,6 +30,14 @@
 
 (defgeneric transform-cell-coords (cell cell-tex)
   (:documentation "Transform cell coordinates to 0..1 space."))
+
+(defmethod clear-texture ((cell-tex cell-texture))
+  (destructuring-bind (w h) (texture-array-of cell-tex)
+    (iter (for i from 0 below w)
+          (with texture = (texture-array-of cell-tex))
+          (iter (for j from 0 below h)
+                (setf (aref texture i j) 0))))
+  (setf (cell-map-of cell-tex) (make-hash-table)))
 
 (defmethod transform-cell-coords ((cell integer) (cell-tex cell-texture))
   (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
