@@ -28,7 +28,7 @@
             0
             0)))
 
-(defun make-vector-gl-text (font &key (mipmapped nil) (internal-size 32) (length 20))
+(defun make-vector-gl-text (font &key (mipmapped t) (internal-size 32) (length 20))
   (let ((font (get-font-loader font)))
     (let ((scaler (zpb-ttf:units/em font)))
       (make-instance (if (not mipmapped)
