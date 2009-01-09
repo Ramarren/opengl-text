@@ -23,7 +23,7 @@
    (tex-coords          :accessor tex-coords-of        :initform nil)
    (character-hash      :initform (make-hash-table)    :accessor character-hash-of)
    (texture-number      :accessor texture-number-of    :initarg  :texture-number        :initform nil)
-   (texture             :initform (make-instance 'cell-texture)  :accessor texture-of)))
+   (texture             :initform (make-instance 'simple-cell-texture)  :accessor texture-of)))
 
 (defgeneric flush-texture (gl-text &key new-texture-array))
 (defgeneric send-texture (gl-text))

@@ -1,14 +1,23 @@
 (in-package :opengl-text)
 
 (defmethod flush-texture ((gl-text textured-opengl-text) &key (new-texture-array nil))
-  ;; not the most efficient method
-  (let ((chars (hash-table-keys (character-hash-of gl-text))))
-    (when chars
-      (setf (character-hash-of gl-text) (make-hash-table))
-      (if new-texture-array
-          (setf (texture-of gl-text) (make-instance 'cell-texture))
-          (clear-texture gl-text))
-      (ensure-characters chars gl-text))))
+    ;; not the most efficient method
+    (let ((chars (hash-table-keys (character-hash-of gl-text)))
+          (old-cell-tex (texture-of gl-text)))
+      (when chars
+        (setf (character-hash-of gl-text) (make-hash-table))
+        (setf (texture-of gl-text)
+              (make-instance 'simple-cell-texture
+                             :size (size-of old-cell-tex)
+                             :texture-array (if new-texture-array
+                                                (make-ffa (list (texture-width-of old-cell-tex)
+                                                                (texture-height-of old-cell-tex))
+                                                          (kind-of old-cell-tex))
+                                                (texture-array-of old-cell-tex))
+                             :texture-width (texture-width-of old-cell-tex)
+                             :texture-height (texture-height-of old-cell-tex)
+                             :kind (kind-of old-cell-tex)))
+        (ensure-characters chars gl-text))))
 
 (defmethod send-texture ((gl-text textured-opengl-text))
   (when *opengl-active*
