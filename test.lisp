@@ -25,7 +25,7 @@
   (setf *the-info-gl-font* (setup-font *the-font* 32)))
 
 (defun setup-font (font emsquare)
-  (make-vector-gl-text *the-font*))
+  (make-vector-gl-text font :internal-size emsquare :mipmapped (eql *kind* :mipmap)))
 
 (defmethod glut:reshape ((window opengl-text-window) w h)
   (gl:viewport 0 0 w h)
@@ -73,6 +73,12 @@
     (gl:translate 3 0 0)
     (gl:color 1 1 1 0.5)
     (draw-gl-string str *the-gl-font*)
+    (gl:flush))
+  (gl:with-pushed-matrix
+    (gl:translate 1 -11 0)
+    (gl:color 1 1 1 1)
+    (gl:scale 0.2 0.2 0)
+    (draw-gl-string str *the-gl-font* :kerning t)
     (gl:flush))
   (gl:translate 4 0 0)
   (gl:scale 2 2 1)
