@@ -2,8 +2,15 @@
 
 (defvar *auto-extend-buffers* t)
 
+;; each character in character-hash refers to a glyph object
+(defclass glyph ()
+  ((tex-coord :initarg :tex-coord :accessor tex-coord-of)
+   (cell :initarg :cell :accessor cell-of)
+   (actual-slice :initarg :actual-slice :accessor actual-slice-of)))
+
 ;;; draw-glyph-function is a function of two arguments, character and size of the font in pixels (of
-;;; the emsquare), and returns a luminance array with the glyph
+;;; the emsquare), and returns a luminance array with the glyph and actual slice of the unit square
+;;; in which the array is placed
 
 ;;; kerning-function returns kerning offset in em-squares
 
@@ -16,14 +23,15 @@
    (tex-coords          :accessor tex-coords-of        :initform nil)
    (character-hash      :initform (make-hash-table)    :accessor character-hash-of)
    (texture-number      :accessor texture-number-of    :initarg  :texture-number        :initform nil)
-   (texture             :initform nil                  :accessor texture-of)))
+   (texture             :initform (make-instance 'cell-texture)  :accessor texture-of)))
+
+(defgeneric flush-texture (gl-text &key new-texture-array))
+(defgeneric send-texture (gl-text))
+(defgeneric clear-texture (gl-text))
 
 (defmethod initialize-instance :after ((instance textured-opengl-text) &rest initargs)
   (declare (ignore initargs))
   ;; force :after method on setf to run, so that scaler field is initialized
-  (when *coerce-em-to-power-of-two*
-    (setf (emsquare-of instance)
-          (ceiling-power-of-two (emsquare-of instance))))
   (when (length-of instance)
     (setf (length-of instance) (length-of instance)))
   (when (draw-glyph-function-of instance)
@@ -37,10 +45,27 @@
           (make-ffa (list (* 4 new-value) 2) :float))))
 
 (defmethod (setf emsquare-of) :after (new-value (object textured-opengl-text))
-  (when *coerce-em-to-power-of-two*
-    (setf (slot-value object 'emsquare)
-          (ceiling-power-of-two (emsquare-of object))))
+  (declare (ignore new-value))
   (flush-texture object :new-texture-array t))
 
 (defmethod (setf draw-glyph-function-of) :after (new-value (object textured-opengl-text))
+  (declare (ignore new-value))
   (flush-texture object :new-texture-array t))
+
+(defgeneric draw-char (char gl-text)
+  (:method (char (gl-text textured-opengl-text))
+    (funcall (draw-glyph-function-of gl-text)
+             char
+             (emsquare-of gl-text))))
+
+(defgeneric add-char (char gl-text &optional send-texture))
+
+(defgeneric ensure-characters (characters gl-text)
+  (:method ((characters sequence) (gl-text textured-opengl-text))
+    (let ((chars-loaded (hash-table-keys (character-hash-of gl-text)))
+          (texture (texture-of gl-text)))
+      (let ((more-chars (set-difference (coerce characters 'list) chars-loaded)))
+        (when more-chars
+          (when chars-loaded (assert texture))
+          (map nil (rcurry #'add-char gl-text nil) more-chars)
+          (send-texture gl-text))))))

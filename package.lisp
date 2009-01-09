@@ -5,3 +5,6 @@
            #:textured-opengl-text #:mipmap-opengl-text
            #:emsquare-of #:*auto-extend-buffers*))
 
+(in-package :opengl-text)
+
+(defvar *opengl-active* t "Disable opengl operations for testing.")
