@@ -12,11 +12,15 @@
 ;;; the emsquare), and returns a luminance array with the glyph and actual slice of the unit square
 ;;; in which the array is placed
 
-;;; kerning-function returns kerning offset in em-squares
+;;; kerning-function takes two arguments, characters or nils, and returns kerning offset in em-squares or nil
+;;; advance function return glyph advance width in em-squares
+;;; placement function takes first character and returns an xy shift in em-squares or nil
 
 (defclass textured-opengl-text ()
   ((draw-glyph-function :initarg  :draw-glyph-function :accessor draw-glyph-function-of)
    (kerning-function    :initarg  :kerning-function    :initform (constantly nil)       :accessor kerning-function-of)
+   (advance-function    :initarg  :advance-function    :accessor advance-function-of)
+   (placement-function  :initarg  :placement-function  :initform (constantly nil) :accessor placement-function-of)
    (emsquare            :initarg  :emsquare            :initform 32                     :accessor emsquare-of)
    (length              :initarg  :length              :initform 20                     :accessor length-of)
    (vertices            :accessor vertices-of          :initform nil)
