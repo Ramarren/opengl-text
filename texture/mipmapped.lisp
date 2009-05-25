@@ -18,7 +18,7 @@
       (with-pointer-to-array (texture
                               tex-pointer
                               :uint8
-                              (length (find-original-array texture))
+                              (array-total-size texture)
                               :copy-in)
         (glu:build-2d-mipmaps :texture-2d :intensity (array-dimension texture 1)
                               (array-dimension texture 0) :luminance :unsigned-byte tex-pointer)))))

@@ -10,9 +10,9 @@
               (make-instance 'simple-cell-texture
                              :size (size-of old-cell-tex)
                              :texture-array (if new-texture-array
-                                                (make-ffa (list (texture-width-of old-cell-tex)
-                                                                (texture-height-of old-cell-tex))
-                                                          (kind-of old-cell-tex))
+                                                (make-array (list (texture-width-of old-cell-tex)
+                                                                  (texture-height-of old-cell-tex))
+                                                            (kind-of old-cell-tex))
                                                 (texture-array-of old-cell-tex))
                              :texture-width (texture-width-of old-cell-tex)
                              :texture-height (texture-height-of old-cell-tex)
@@ -31,7 +31,7 @@
     (let ((new-texture (texture-array-of (texture-of gl-text))))
       (with-pointer-to-array (new-texture tex-pointer
                                           :uint8
-                                          (length (find-original-array new-texture))
+                                          (array-total-size new-texture)
                                           :copy-in)
         (cl-opengl:tex-image-2d :texture-2d 0 :intensity (array-dimension new-texture 1)
                                 (array-dimension new-texture 0) 0 :luminance :unsigned-byte tex-pointer)))))

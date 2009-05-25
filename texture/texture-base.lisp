@@ -44,9 +44,9 @@
 (defmethod (setf length-of) :after (new-value (object textured-opengl-text))
   (when (plusp new-value)
     (setf (vertices-of object)
-          (make-ffa (list (* 4 new-value) 3) :float))
+          (make-array (list (* 4 new-value) 3) :element-type 'single-float))
     (setf (tex-coords-of object)
-          (make-ffa (list (* 4 new-value) 2) :float))))
+          (make-array (list (* 4 new-value) 2) :element-type 'single-float))))
 
 (defmethod (setf emsquare-of) :after (new-value (object textured-opengl-text))
   (declare (ignore new-value))

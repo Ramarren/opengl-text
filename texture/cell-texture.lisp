@@ -5,7 +5,7 @@
 (defclass cell-texture ()
   ((texture-array  :accessor texture-array-of  :initarg :texture-array  :initform nil)
    (size           :accessor size-of           :initarg :size           :initform 0)
-   (kind           :accessor kind-of           :initarg :type           :initform :uint8)
+   (kind           :accessor kind-of           :initarg :type           :initform '(unsigned-byte 8))
    (texture-width  :accessor texture-width-of  :initarg :texture-width :initform 0)
    (texture-height :accessor texture-height-of :initarg :texture-height :initform 0)
    (cell-map       :accessor cell-map-of       :initarg :cell-map       :initform (make-hash-table))))
@@ -55,7 +55,8 @@
 
 (defmethod get-cell ((cell integer) (cell-tex cell-texture))
   (destructuring-bind (xmin ymin xmax ymax) (gethash cell (cell-map-of cell-tex))
-    (let ((new-array (make-ffa (list (1+ (- xmax xmin)) (1+ (- ymax ymin))) (kind-of cell-tex)))
+    (let ((new-array (make-array (list (1+ (- xmax xmin)) (1+ (- ymax ymin)))
+                                 :element-type (kind-of cell-tex)))
           (cell-array (texture-array-of cell-tex)))
       (iter (for x from xmin to xmax)
             (iter (for y from ymin to ymax)
@@ -65,7 +66,8 @@
 
 (defmethod enlarge-cell-texture ((cell-tex cell-texture))
   (let ((new-size (ash 32 (1+ (size-of cell-tex)))))
-    (let ((new-texture (make-ffa (list new-size new-size) (kind-of cell-tex))))
+    (let ((new-texture (make-array (list new-size new-size)
+                                   :element-type (kind-of cell-tex))))
       (incf (size-of cell-tex))
       (setf (texture-width-of cell-tex) new-size)
       (setf (texture-height-of cell-tex) new-size)

@@ -1,7 +1,7 @@
 (asdf:defsystem opengl-text
   :description "Textured fonts for OpenGL"
   :licence "BSD-style"
-  :depends-on (:cl-opengl :iterate :alexandria :ffa :array-operations :trivial-garbage :cl-glu)
+  :depends-on (:cl-opengl :iterate :alexandria :ffa :trivial-garbage :cl-glu)
   :components ((:static-file "opengl-text.asd" :pathname "opengl-text.asd")
                (:file "package")
                (:module "texture"
