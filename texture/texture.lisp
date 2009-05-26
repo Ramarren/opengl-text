@@ -21,13 +21,12 @@
 
 (defmethod send-texture ((gl-text textured-opengl-text))
   (when *opengl-active*
-    (if (texture-number-of gl-text)
-            (cl-opengl:bind-texture :texture-2d (texture-number-of gl-text))
-            (let ((new-number (car (cl-opengl:gen-textures 1))))
-              (setf (texture-number-of gl-text) new-number)
-              (cl-opengl:bind-texture :texture-2d new-number)
-              (trivial-garbage:finalize gl-text #'(lambda ()
-                                                    (gl:delete-textures (list new-number))))))
+    (unless (texture-number-of gl-text)
+      (let ((new-number (car (cl-opengl:gen-textures 1))))
+        (setf (texture-number-of gl-text) new-number)
+        (trivial-garbage:finalize gl-text #'(lambda ()
+                                              (gl:delete-textures (list new-number))))))
+    (cl-opengl:bind-texture :texture-2d (texture-number-of gl-text))
     (let ((new-texture (texture-array-of (texture-of gl-text))))
       (with-pointer-to-array (new-texture tex-pointer
                                           :uint8
