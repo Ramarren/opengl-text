@@ -12,7 +12,7 @@
                              :texture-array (if new-texture-array
                                                 (make-array (list (texture-width-of old-cell-tex)
                                                                   (texture-height-of old-cell-tex))
-                                                            (kind-of old-cell-tex))
+                                                            :element-type (kind-of old-cell-tex))
                                                 (texture-array-of old-cell-tex))
                              :texture-width (texture-width-of old-cell-tex)
                              :texture-height (texture-height-of old-cell-tex)
